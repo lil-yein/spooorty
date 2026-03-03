@@ -1,0 +1,114 @@
+/**
+ * BottomNav component — mapped from Figma component documentation
+ *
+ * Props (from Figma properties):
+ *   selected: Item 1 | Item 2 | Item 3 | Item 4
+ *     Item 1 = Discover (globe), Item 2 = Calendar, Item 3 = Create (+), Item 4 = Profile (person)
+ *   onSelect: callback with tab index
+ *
+ * Anatomy (from Figma docs):
+ *   4 items, fill screen width
+ *   Icon: 36×36, always outline style
+ *   Selected = icon/bold color
+ *   Unselected = icon/subtle color
+ *   Padding left/right: spacer/40
+ *   Padding top: spacer/24
+ *   Background: linear gradient from surface/bold (60%) → transparent
+ *   Bottom: iOS home indicator safe area (34px)
+ *   Single-select only
+ */
+
+import React from 'react';
+import {
+  View,
+  Pressable,
+  StyleSheet,
+  Platform,
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { colors } from '../../lib/tokens/colors';
+import { spacer } from '../../lib/tokens/spacing';
+
+// ─── Types ──────────────────────────────────────────────
+
+type TabIndex = 0 | 1 | 2 | 3;
+
+export type BottomNavProps = {
+  selected?: TabIndex;
+  onSelect?: (index: TabIndex) => void;
+  bottomInset?: number;
+};
+
+// ─── Tab config ─────────────────────────────────────────
+// Icons always use outline style — selection changes color only
+
+const TABS: { icon: keyof typeof Ionicons.glyphMap }[] = [
+  { icon: 'globe-outline' },           // Discover
+  { icon: 'calendar-outline' },        // Calendar
+  { icon: 'add-outline' },             // Create
+  { icon: 'person-outline' },          // Profile
+];
+
+const ICON_SIZE = 36;
+
+// ─── Component ──────────────────────────────────────────
+
+/** Default bottom inset — 34px matches iOS home indicator height from Figma */
+const DEFAULT_BOTTOM_INSET = 34;
+
+export default function BottomNav({
+  selected = 0,
+  onSelect,
+  bottomInset,
+}: BottomNavProps) {
+  const safeBottom = bottomInset ?? (Platform.OS === 'web' ? 0 : DEFAULT_BOTTOM_INSET);
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.items}>
+        {TABS.map((tab, index) => {
+          const isSelected = selected === index;
+          const iconColor = isSelected ? colors.icon.bold : colors.icon.subtle;
+
+          return (
+            <Pressable
+              key={index}
+              style={styles.tabItem}
+              onPress={() => onSelect?.(index as TabIndex)}
+            >
+              <Ionicons name={tab.icon} size={ICON_SIZE} color={iconColor} />
+            </Pressable>
+          );
+        })}
+      </View>
+
+      {/* Home indicator safe area */}
+      {safeBottom > 0 && <View style={{ height: safeBottom }} />}
+    </View>
+  );
+}
+
+// ─── Styles ─────────────────────────────────────────────
+
+const styles = StyleSheet.create({
+  container: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: colors.surface.bold,
+  },
+
+  items: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacer['40'],
+    paddingTop: spacer['24'],
+  },
+
+  tabItem: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+});

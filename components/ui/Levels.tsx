@@ -25,6 +25,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { colors } from '../../lib/tokens/colors';
 import { spacer } from '../../lib/tokens/spacing';
 import { textStyles } from '../../lib/tokens/textStyles';
+import Divider from './Divider';
 
 // ─── Types ──────────────────────────────────────────────
 
@@ -90,7 +91,7 @@ export default function Levels({ indicator = 1 }: LevelsProps) {
       </View>
 
       {/* Horizontal line */}
-      <View style={styles.line} />
+      <Divider />
     </View>
   );
 }
@@ -124,10 +125,5 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 20,
     alignItems: 'center',
-  },
-
-  line: {
-    height: 0.5,
-    backgroundColor: colors.border.subtle,
   },
 });

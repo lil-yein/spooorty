@@ -76,7 +76,9 @@ export default function BottomNav({
               style={styles.tabItem}
               onPress={() => onSelect?.(index as TabIndex)}
             >
-              <Ionicons name={tab.icon} size={ICON_SIZE} color={iconColor} />
+              <View style={styles.iconWrap}>
+                <Ionicons name={tab.icon} size={ICON_SIZE} color={iconColor} />
+              </View>
             </Pressable>
           );
         })}
@@ -110,5 +112,13 @@ const styles = StyleSheet.create({
   tabItem: {
     alignItems: 'center',
     justifyContent: 'center',
+  },
+
+  iconWrap: {
+    width: ICON_SIZE,
+    height: ICON_SIZE,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
   },
 });

@@ -25,6 +25,11 @@ import Tag from './components/ui/Tag';
 import Tab from './components/ui/Tab';
 import Switch from './components/ui/Switch';
 import Levels from './components/ui/Levels';
+import Divider from './components/ui/Divider';
+import DateCell from './components/ui/DateCell';
+import Calendar from './components/ui/Calendar';
+import Range from './components/ui/Range';
+import ProgressBar from './components/ui/ProgressBar';
 
 import { colors } from './lib/tokens/colors';
 import { spacer } from './lib/tokens/spacing';
@@ -89,6 +94,11 @@ export default function App() {
   const [tabSelected, setTabSelected] = useState(0);
   const [switchOn, setSwitchOn] = useState(true);
   const [switchOff, setSwitchOff] = useState(false);
+  const [calMonth, setCalMonth] = useState(0); // January
+  const [calYear, setCalYear] = useState(2024);
+  const [calDay, setCalDay] = useState<number | undefined>(1);
+  const [rangeLow, setRangeLow] = useState(0);
+  const [rangeHigh, setRangeHigh] = useState(100);
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -416,6 +426,83 @@ export default function App() {
           </Row>
           <Row label="Off">
             <Switch value={switchOff} onToggle={setSwitchOff} />
+          </Row>
+        </Section>
+
+        {/* ── DIVIDER ─────────────────────────────── */}
+
+        <Section title="Divider">
+          <Row label="Subtle (default)">
+            <Divider />
+          </Row>
+          <Row label="Bold">
+            <Divider emphasis="Bold" />
+          </Row>
+        </Section>
+
+        {/* ── DATE CELL ──────────────────────────── */}
+
+        <Section title="DateCell">
+          <Row label="Unselected / Selected / Today / Events">
+            <DateCell day={5} />
+            <DateCell day={12} selected />
+            <DateCell day={18} today />
+            <DateCell day={25} events />
+          </Row>
+          <Row label="Selected + Today + Events">
+            <DateCell day={1} selected today events />
+          </Row>
+        </Section>
+
+        {/* ── CALENDAR ──────────────────────────── */}
+
+        <Section title="Calendar">
+          <Calendar
+            year={calYear}
+            month={calMonth}
+            selectedDay={calDay}
+            todayDay={18}
+            eventDays={[5, 12, 18, 25]}
+            onSelectDay={setCalDay}
+            onPrevMonth={() => {
+              if (calMonth === 0) { setCalMonth(11); setCalYear(calYear - 1); }
+              else setCalMonth(calMonth - 1);
+            }}
+            onNextMonth={() => {
+              if (calMonth === 11) { setCalMonth(0); setCalYear(calYear + 1); }
+              else setCalMonth(calMonth + 1);
+            }}
+          />
+        </Section>
+
+        {/* ── RANGE ─────────────────────────────── */}
+
+        <Section title="Range">
+          <Row label={`Low: $${rangeLow}  —  High: $${rangeHigh}`}>
+            <Range
+              min={0}
+              max={100}
+              low={rangeLow}
+              high={rangeHigh}
+              onChangeRange={([lo, hi]) => { setRangeLow(lo); setRangeHigh(hi); }}
+            />
+          </Row>
+        </Section>
+
+        {/* ── PROGRESS BAR ──────────────────────── */}
+
+        <Section title="Progress Bar">
+          <Row label="0%">
+            <ProgressBar progress={0} />
+          </Row>
+          <Row label="25%">
+            <ProgressBar progress={0.25} />
+          </Row>
+          <Row label="60%">
+            <ProgressBar progress={0.6} />
+          </Row>
+          <Row label="100%">
+            <ProgressBar progress={1} />
           </Row>
         </Section>
 

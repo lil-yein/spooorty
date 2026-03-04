@@ -18,6 +18,13 @@ import Button from './components/ui/Button';
 import Avatar from './components/ui/Avatar';
 import AvatarGroup from './components/ui/AvatarGroup';
 import BottomNav from './components/ui/BottomNav';
+import Input from './components/ui/Input';
+import Search from './components/ui/Search';
+import TextArea from './components/ui/TextArea';
+import Tag from './components/ui/Tag';
+import Tab from './components/ui/Tab';
+import Switch from './components/ui/Switch';
+import Levels from './components/ui/Levels';
 
 import { colors } from './lib/tokens/colors';
 import { spacer } from './lib/tokens/spacing';
@@ -73,6 +80,15 @@ const sectionStyles = StyleSheet.create({
 
 export default function App() {
   const [selectedTab, setSelectedTab] = useState<0 | 1 | 2 | 3>(0);
+  const [inputValue, setInputValue] = useState('');
+  const [inputFilled, setInputFilled] = useState('Filled text');
+  const [searchValue, setSearchValue] = useState('');
+  const [searchFilled, setSearchFilled] = useState('Jane Doe');
+  const [textAreaValue, setTextAreaValue] = useState('');
+  const [textAreaFilled, setTextAreaFilled] = useState('Typed description that wraps to multiple lines in the text area');
+  const [tabSelected, setTabSelected] = useState(0);
+  const [switchOn, setSwitchOn] = useState(true);
+  const [switchOff, setSwitchOff] = useState(false);
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -287,6 +303,133 @@ export default function App() {
                 { type: 'Text', label: 'EF' },
               ]}
             />
+          </Row>
+        </Section>
+
+        {/* ── INPUT ──────────────────────────────── */}
+
+        <Section title="Input">
+          <Row label="Enabled (empty)">
+            <Input
+              placeholder="Enter club name"
+              value={inputValue}
+              onChangeText={setInputValue}
+            />
+          </Row>
+          <Row label="Filled">
+            <Input
+              placeholder="Enter club name"
+              value={inputFilled}
+              onChangeText={setInputFilled}
+            />
+          </Row>
+        </Section>
+
+        {/* ── SEARCH ─────────────────────────────── */}
+
+        <Section title="Search">
+          <Row label="Enabled (empty)">
+            <Search
+              placeholder="Search Members for Admin"
+              value={searchValue}
+              onChangeText={setSearchValue}
+            />
+          </Row>
+          <Row label="Filled">
+            <Search
+              placeholder="Search Members for Admin"
+              value={searchFilled}
+              onChangeText={setSearchFilled}
+            />
+          </Row>
+          <Row label="Without icon">
+            <Search
+              placeholder="Search"
+              showIcon={false}
+            />
+          </Row>
+        </Section>
+
+        {/* ── TEXT AREA ──────────────────────────── */}
+
+        <Section title="Text Area">
+          <Row label="Enabled (empty)">
+            <TextArea
+              placeholder="Add your description"
+              value={textAreaValue}
+              onChangeText={setTextAreaValue}
+            />
+          </Row>
+          <Row label="Filled">
+            <TextArea
+              placeholder="Add your description"
+              value={textAreaFilled}
+              onChangeText={setTextAreaFilled}
+            />
+          </Row>
+          <Row label="Without icon">
+            <TextArea
+              placeholder="Add your description"
+              showIcon={false}
+            />
+          </Row>
+        </Section>
+
+        {/* ── TAG ────────────────────────────────── */}
+
+        <Section title="Tag">
+          <Row label="Lg — Selected / Unselected">
+            <Tag label="Football" selected size="Lg" />
+            <Tag label="Basketball" size="Lg" />
+          </Row>
+          <Row label="Sm — Selected / Unselected">
+            <Tag label="Beginner" selected size="Sm" />
+            <Tag label="Intermediate" size="Sm" />
+            <Tag label="Advanced" size="Sm" />
+          </Row>
+        </Section>
+
+        {/* ── TAB ────────────────────────────────── */}
+
+        <Section title="Tab">
+          <Row label="2 items">
+            <Tab
+              items={['Upcoming', 'Past']}
+              selected={tabSelected}
+              onSelect={setTabSelected}
+            />
+          </Row>
+          <Row label="3 items">
+            <Tab
+              items={['Events', 'Members', 'About']}
+              selected={tabSelected % 3}
+              onSelect={setTabSelected}
+            />
+          </Row>
+        </Section>
+
+        {/* ── SWITCH ─────────────────────────────── */}
+
+        <Section title="Switch">
+          <Row label="On">
+            <Switch value={switchOn} onToggle={setSwitchOn} />
+          </Row>
+          <Row label="Off">
+            <Switch value={switchOff} onToggle={setSwitchOff} />
+          </Row>
+        </Section>
+
+        {/* ── LEVELS ──────────────────────────────── */}
+
+        <Section title="Levels">
+          <Row label="Indicator = Item 1 (Beginner)">
+            <Levels indicator={1} />
+          </Row>
+          <Row label="Indicator = Item 3 (Intermediate)">
+            <Levels indicator={3} />
+          </Row>
+          <Row label="Indicator = Item 5 (Advanced)">
+            <Levels indicator={5} />
           </Row>
         </Section>
 

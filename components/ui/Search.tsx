@@ -22,7 +22,7 @@ import {
   StyleSheet,
   type TextInputProps,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Icon from './Icon';
 import { colors } from '../../lib/tokens/colors';
 import { spacer } from '../../lib/tokens/spacing';
 import { borderRadius } from '../../lib/tokens/spacing';
@@ -75,8 +75,8 @@ export default function Search({
       />
       {showIcon && (
         <View style={styles.iconWrap}>
-          <Ionicons
-            name="search-outline"
+          <Icon
+            type="search"
             size={12}
             color={value ? colors.icon.bold : colors.icon.subtle}
           />
@@ -103,6 +103,7 @@ const styles = StyleSheet.create({
     flex: 1,
     ...textStyles.body03Light,
     color: colors.text.bold,
+    height: textStyles.body03Light.lineHeight,
     padding: 0,
     margin: 0,
     outlineStyle: 'none' as const,

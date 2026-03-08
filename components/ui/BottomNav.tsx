@@ -25,7 +25,7 @@ import {
   StyleSheet,
   Platform,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Icon, { type IconType } from './Icon';
 import { colors } from '../../lib/tokens/colors';
 import { spacer } from '../../lib/tokens/spacing';
 
@@ -40,13 +40,13 @@ export type BottomNavProps = {
 };
 
 // ─── Tab config ─────────────────────────────────────────
-// Icons always use outline style — selection changes color only
+// Icons use Icon foundation component — selection changes color only
 
-const TABS: { icon: keyof typeof Ionicons.glyphMap }[] = [
-  { icon: 'globe-outline' },           // Discover
-  { icon: 'calendar-outline' },        // Calendar
-  { icon: 'add-outline' },             // Create
-  { icon: 'person-outline' },          // Profile
+const TABS: { icon: IconType }[] = [
+  { icon: 'public' },               // Discover (globe)
+  { icon: 'calendar' },             // Calendar
+  { icon: 'add' },                  // Create
+  { icon: 'person' },               // Profile
 ];
 
 const ICON_SIZE = 36;
@@ -77,7 +77,7 @@ export default function BottomNav({
               onPress={() => onSelect?.(index as TabIndex)}
             >
               <View style={styles.iconWrap}>
-                <Ionicons name={tab.icon} size={ICON_SIZE} color={iconColor} />
+                <Icon type={tab.icon} size={ICON_SIZE} color={iconColor} />
               </View>
             </Pressable>
           );
@@ -94,10 +94,6 @@ export default function BottomNav({
 
 const styles = StyleSheet.create({
   container: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
     backgroundColor: colors.surface.bold,
   },
 

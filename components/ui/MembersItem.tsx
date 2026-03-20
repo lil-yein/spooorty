@@ -10,7 +10,7 @@
  *   onPress: callback (optional)
  *
  * Anatomy (from Figma docs):
- *   Row: w=333, gap spacer/16, items center
+ *   Row: w=100%, gap spacer/16, items center
  *   Left: Avatar 52px with optional +count badge
  *   Center: flex 1, gap spacer/4
  *     Name: body01Light, text.bold
@@ -36,6 +36,7 @@ export type MembersItemProps = {
   showIcon?: boolean;
   icon?: IconRenderer;
   onPress?: () => void;
+  onIconPress?: () => void;
 };
 
 // ─── Component ──────────────────────────────────────────
@@ -47,6 +48,7 @@ export default function MembersItem({
   showIcon = true,
   icon,
   onPress,
+  onIconPress,
 }: MembersItemProps) {
   const defaultIcon: IconRenderer = ({ color, size }) => (
     <Icon type="add friend" color={color} size={size} />
@@ -74,9 +76,15 @@ export default function MembersItem({
 
       {/* Trailing icon */}
       {showIcon && (
-        <View style={styles.iconWrap}>
-          {renderIcon({ color: colors.icon.bold, size: 16 })}
-        </View>
+        onIconPress ? (
+          <Pressable style={styles.iconWrap} onPress={onIconPress}>
+            {renderIcon({ color: colors.icon.subtle, size: 16 })}
+          </Pressable>
+        ) : (
+          <View style={styles.iconWrap}>
+            {renderIcon({ color: colors.icon.bold, size: 16 })}
+          </View>
+        )
       )}
     </Pressable>
   );
@@ -86,7 +94,7 @@ export default function MembersItem({
 
 const styles = StyleSheet.create({
   container: {
-    width: 333,
+    width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacer['16'],

@@ -106,6 +106,11 @@ export default function DiscoverScreen() {
               ctaColor={card.ctaColor}
               ctaTextColor={card.ctaTextColor}
               onCtaPress={() => handleCtaPress(card.id)}
+              onPress={
+                selectedTag === 0
+                  ? () => navigation.navigate('Club', { clubId: card.id })
+                  : () => navigation.navigate('Event', { eventId: card.id })
+              }
             />
           ))}
         </View>
@@ -124,7 +129,7 @@ const styles = StyleSheet.create({
 
   content: {
     paddingTop: spacer['64'],
-    paddingBottom: spacer['96'],
+    paddingBottom: 94,
   },
 
   // Header

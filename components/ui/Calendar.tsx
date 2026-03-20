@@ -20,7 +20,7 @@
 
 import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Icon from './Icon';
 import { colors } from '../../lib/tokens/colors';
 import { spacer, borderRadius } from '../../lib/tokens/spacing';
 import { textStyles } from '../../lib/tokens/textStyles';
@@ -34,6 +34,7 @@ export type CalendarProps = {
   selectedDay?: number;
   todayDay?: number;
   eventDays?: number[];
+  eventCounts?: Record<number, number>;
   onSelectDay?: (day: number) => void;
   onPrevMonth?: () => void;
   onNextMonth?: () => void;
@@ -83,6 +84,7 @@ export default function Calendar({
   selectedDay,
   todayDay,
   eventDays = [],
+  eventCounts = {},
   onSelectDay,
   onPrevMonth,
   onNextMonth,
@@ -97,7 +99,7 @@ export default function Calendar({
       {/* Back button */}
       {showBackButton && (
         <Pressable style={styles.navButton} onPress={onBack}>
-          <Ionicons name="chevron-back" size={16} color={colors.icon.bold} />
+          <Icon type="chevron Left" size={16} color={colors.icon.bold} />
         </Pressable>
       )}
 
@@ -108,10 +110,10 @@ export default function Calendar({
         </Text>
         <View style={styles.navIcons}>
           <Pressable style={styles.navButton} onPress={onPrevMonth}>
-            <Ionicons name="chevron-back" size={16} color={colors.icon.bold} />
+            <Icon type="chevron Left" size={16} color={colors.icon.bold} />
           </Pressable>
           <Pressable style={styles.navButton} onPress={onNextMonth}>
-            <Ionicons name="chevron-forward" size={16} color={colors.icon.bold} />
+            <Icon type="chevron right" size={16} color={colors.icon.bold} />
           </Pressable>
         </View>
       </View>
@@ -137,6 +139,7 @@ export default function Calendar({
                     selected={day === selectedDay}
                     today={day === todayDay}
                     events={eventSet.has(day)}
+                    eventCount={eventCounts[day] || 0}
                     onPress={() => onSelectDay?.(day)}
                   />
                 ) : (
@@ -173,7 +176,7 @@ const styles = StyleSheet.create({
 
   navIcons: {
     flexDirection: 'row',
-    gap: spacer['12'],
+    gap: spacer['8'],
   },
 
   navButton: {

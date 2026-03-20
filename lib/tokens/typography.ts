@@ -6,7 +6,9 @@
 
 // ─── Font Family ────────────────────────────────────────
 export const fontFamily = {
-  base: 'ALT Riviera',
+  base: 'Nohemi',
+  light: 'Nohemi-Light',
+  medium: 'Nohemi-Regular',
 } as const;
 
 // ─── Font Size ──────────────────────────────────────────

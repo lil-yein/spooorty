@@ -36,6 +36,7 @@ export type TagProps = {
   selected?: boolean;
   size?: TagSize;
   onPress?: () => void;
+  style?: ViewStyle;
 };
 
 // ─── Size configs ───────────────────────────────────────
@@ -60,6 +61,7 @@ export default function Tag({
   selected = false,
   size = 'Lg',
   onPress,
+  style,
 }: TagProps) {
   const sizeConfig = SIZE_STYLES[size];
 
@@ -70,6 +72,7 @@ export default function Tag({
         styles.container,
         sizeConfig.container,
         selected ? styles.selectedContainer : styles.unselectedContainer,
+        style,
       ]}
     >
       <Text

@@ -24,6 +24,7 @@ export { default as SearchContentItem } from './SearchContentItem';
 export { default as ButtonMultiSelect } from './ButtonMultiSelect';
 export { default as ButtonSelect } from './ButtonSelect';
 export { default as CardLg } from './CardLg';
+export { default as InnerContentCard } from './InnerContentCard';
 export { default as Icon } from './Icon';
 
 export type { ButtonProps } from './Button';
@@ -52,4 +53,5 @@ export type { SearchContentItemProps } from './SearchContentItem';
 export type { ButtonMultiSelectProps } from './ButtonMultiSelect';
 export type { ButtonSelectProps } from './ButtonSelect';
 export type { CardLgProps } from './CardLg';
+export type { InnerContentCardProps } from './InnerContentCard';
 export type { IconType, IconVariant, IconProps } from './Icon';

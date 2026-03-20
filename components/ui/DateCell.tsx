@@ -31,6 +31,7 @@ export type DateCellProps = {
   selected?: boolean;
   today?: boolean;
   events?: boolean;
+  eventCount?: number;
   onPress?: () => void;
 };
 
@@ -41,8 +42,15 @@ export default function DateCell({
   selected = false,
   today = false,
   events = false,
+  eventCount = 0,
   onPress,
 }: DateCellProps) {
+  const count = eventCount || (events ? 1 : 0);
+  const showDots = count > 0;
+  // Show up to 3 dots; if more than 3 events, show 3 dots + a plus icon
+  const dotCount = Math.min(count, 3);
+  const showPlus = count > 3;
+
   return (
     <Pressable style={styles.container} onPress={onPress}>
       {/* Circle */}
@@ -62,11 +70,17 @@ export default function DateCell({
       </View>
 
       {/* Event indicator dots */}
-      {events && (
+      {showDots && (
         <View style={styles.indicator}>
-          <View style={styles.dot} />
-          <View style={styles.dot} />
-          <View style={styles.dot} />
+          {Array.from({ length: dotCount }, (_, i) => (
+            <View key={i} style={styles.dot} />
+          ))}
+          {showPlus && (
+            <View style={styles.plusIcon}>
+              <View style={styles.plusH} />
+              <View style={styles.plusV} />
+            </View>
+          )}
         </View>
       )}
     </Pressable>
@@ -109,6 +123,27 @@ const styles = StyleSheet.create({
     width: 4,
     height: 4,
     borderRadius: 2,
+    backgroundColor: colors.icon.bold,
+  },
+
+  plusIcon: {
+    width: 4,
+    height: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  plusH: {
+    position: 'absolute',
+    width: 4,
+    height: 1,
+    backgroundColor: colors.icon.bold,
+  },
+
+  plusV: {
+    position: 'absolute',
+    width: 1,
+    height: 4,
     backgroundColor: colors.icon.bold,
   },
 });

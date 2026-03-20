@@ -25,6 +25,7 @@ import {
   StyleSheet,
   Platform,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import Icon, { type IconType } from './Icon';
 import { colors } from '../../lib/tokens/colors';
 import { spacer } from '../../lib/tokens/spacing';
@@ -64,7 +65,11 @@ export default function BottomNav({
   const safeBottom = bottomInset ?? (Platform.OS === 'web' ? 0 : DEFAULT_BOTTOM_INSET);
 
   return (
-    <View style={styles.container}>
+    <LinearGradient
+      colors={[colors.surface.transparent, colors.surface.bold, colors.surface.bold]}
+      locations={[0, 0.4, 1]}
+      style={styles.container}
+    >
       <View style={styles.items}>
         {TABS.map((tab, index) => {
           const isSelected = selected === index;
@@ -86,7 +91,7 @@ export default function BottomNav({
 
       {/* Home indicator safe area */}
       {safeBottom > 0 && <View style={{ height: safeBottom }} />}
-    </View>
+    </LinearGradient>
   );
 }
 
@@ -94,7 +99,10 @@ export default function BottomNav({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: colors.surface.bold,
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
   },
 
   items: {

@@ -182,7 +182,7 @@ const styles = StyleSheet.create({
   },
 
   scrollContent: {
-    paddingBottom: spacer['128'],
+    paddingBottom: 94,
   },
 
   header: {

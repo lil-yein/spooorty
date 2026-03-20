@@ -68,6 +68,7 @@ export default function Tab({ items, selected, onSelect }: TabProps) {
 const styles = StyleSheet.create({
   container: {
     paddingHorizontal: spacer['16'],
+    paddingTop: spacer['16'],
   },
 
   row: {

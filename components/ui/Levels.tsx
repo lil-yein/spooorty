@@ -15,13 +15,17 @@
  *   Line: 0.5px border/subtle, full width
  *   Gap: spacer/16 between labels row and line
  *
+ * Responsive:
+ *   When container width < 320px, labels switch to abbreviated form:
+ *   Beg, Beg-Int, Inter, Int-Adv, Adv
+ *
  * Requirements:
  *   Indicator property has fixed left padding value as it
  *   depends on the length of the word of levels.
  */
 
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { View, Text, StyleSheet, type LayoutChangeEvent } from 'react-native';
 import { colors } from '../../lib/tokens/colors';
 import { spacer } from '../../lib/tokens/spacing';
 import { textStyles } from '../../lib/tokens/textStyles';
@@ -36,7 +40,10 @@ export type LevelsProps = {
 
 // ─── Labels ─────────────────────────────────────────────
 
-const LABELS = ['Beginner', 'Beg-Int', 'Intermediate', 'Int-Adv', 'Advanced'];
+const LABELS_FULL = ['Beginner', 'Beg-Int', 'Intermediate', 'Int-Adv', 'Advanced'];
+const LABELS_SHORT = ['Beg', 'Beg-Int', 'Inter', 'Int-Adv', 'Adv'];
+
+const COMPACT_BREAKPOINT = 320;
 
 // ─── Triangle (CSS border trick, 14×8) ──────────────────
 
@@ -61,12 +68,20 @@ const triangleStyles = StyleSheet.create({
 
 export default function Levels({ indicator = 1 }: LevelsProps) {
   const selectedIndex = indicator - 1;
+  const [isCompact, setIsCompact] = useState(false);
+
+  const handleLayout = useCallback((e: LayoutChangeEvent) => {
+    const { width } = e.nativeEvent.layout;
+    setIsCompact(width < COMPACT_BREAKPOINT);
+  }, []);
+
+  const labels = isCompact ? LABELS_SHORT : LABELS_FULL;
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container} onLayout={handleLayout}>
       {/* Labels row */}
       <View style={styles.labelsRow}>
-        {LABELS.map((label, index) => {
+        {labels.map((label, index) => {
           const isSelected = index === selectedIndex;
           return (
             <View key={label} style={styles.labelWrap}>

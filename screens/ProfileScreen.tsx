@@ -35,7 +35,7 @@ const styles = StyleSheet.create({
   content: {
     paddingTop: spacer['64'],
     paddingHorizontal: spacer['16'],
-    paddingBottom: spacer['96'],
+    paddingBottom: 94,
   },
   title: {
     ...textStyles.headline02Medium,

@@ -5,12 +5,14 @@
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { NavigatorScreenParams } from '@react-navigation/native';
 import type { DiscoverStackParamList } from './DiscoverStack';
+import type { CalendarStackParamList } from './CalendarStack';
+import type { ProfileStackParamList } from './ProfileStack';
 
 export type RootTabParamList = {
   Discover: NavigatorScreenParams<DiscoverStackParamList> | undefined;
-  Calendar: undefined;
+  Calendar: NavigatorScreenParams<CalendarStackParamList> | undefined;
   Create: undefined;
-  Profile: undefined;
+  Profile: NavigatorScreenParams<ProfileStackParamList> | undefined;
 };
 
 export type RootTabScreenProps<T extends keyof RootTabParamList> =

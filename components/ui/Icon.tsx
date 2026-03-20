@@ -63,7 +63,8 @@ export type IconType =
   | 'close'
   | 'add friend'
   | 'notification'
-  | 'filter';
+  | 'filter'
+  | 'camera';
 
 export type IconVariant = 'filled' | 'outlined';
 
@@ -102,6 +103,7 @@ const FILLED_MAP: Record<IconType, string> = {
   'add friend': 'person-add',
   'notification': 'notifications',
   'filter': 'tune',
+  'camera': 'photo-camera',
 };
 
 // ─── Outline overrides (only for icons with distinct outline glyphs) ──
@@ -115,6 +117,12 @@ const OUTLINE_OVERRIDES: Partial<Record<IconType, string>> = {
   'people': 'people-outline',
   'add friend': 'person-add-alt',
   'notification': 'notifications-none',
+};
+
+// ─── Ionicons outline overrides (for icons without MaterialIcons outline) ──
+const OUTLINE_IONICONS: Partial<Record<IconType, string>> = {
+  'setting': 'settings-outline',
+  'camera': 'camera-outline',
 };
 
 // ─── Props ──────────────────────────────────────────────
@@ -139,6 +147,17 @@ export default function Icon({
     return (
       <Ionicons
         name="logo-instagram"
+        size={size}
+        color={color}
+      />
+    );
+  }
+
+  // Icons with Ionicons outline variants (no MaterialIcons outline glyph)
+  if (variant === 'outlined' && OUTLINE_IONICONS[type]) {
+    return (
+      <Ionicons
+        name={OUTLINE_IONICONS[type] as keyof typeof Ionicons.glyphMap}
         size={size}
         color={color}
       />

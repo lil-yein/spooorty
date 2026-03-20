@@ -15,6 +15,7 @@ export const colors = {
     inverse: '#000000',
     overlay: 'rgba(0, 0, 0, 0.20)',
     blur: 'rgba(255, 255, 255, 0.70)',
+    transparent: 'rgba(255, 255, 255, 0)',
   },
 
   // ─── Text ───────────────────────────────────────────

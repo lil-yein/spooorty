@@ -240,7 +240,7 @@ const styles = StyleSheet.create({
 
   listContent: {
     paddingHorizontal: spacer['24'],
-    paddingBottom: spacer['128'],
+    paddingBottom: 94,
   },
 
   sectionHeader: {

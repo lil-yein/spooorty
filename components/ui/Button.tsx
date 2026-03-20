@@ -62,6 +62,8 @@ export type ButtonProps = {
   icon?: IconRenderer;
   onPress?: PressableProps['onPress'];
   disabled?: PressableProps['disabled'];
+  /** Override default text color (e.g. colors.text.subtle for inactive states) */
+  overrideTextColor?: string;
 };
 
 // ─── Component ──────────────────────────────────────────
@@ -78,6 +80,7 @@ export default function Button({
   icon,
   onPress,
   disabled,
+  overrideTextColor,
 }: ButtonProps) {
   const isLoading = state === 'Loading';
   const isDisabled = disabled || isLoading;
@@ -98,18 +101,22 @@ export default function Button({
   ].filter(Boolean) as ViewStyle[];
 
   // ── Text color ──────────────────────────────────────────
-  const textColor: string = isLoading || disabled
-    ? colors.text.subtle
-    : emphasis === 'Bold'
-      ? colors.text.onhighlight
-      : colors.text.bold;
+  const textColor: string = overrideTextColor
+    ? overrideTextColor
+    : isLoading || disabled
+      ? colors.text.subtle
+      : emphasis === 'Bold'
+        ? colors.text.onhighlight
+        : colors.text.bold;
 
   // ── Icon color ──────────────────────────────────────────
-  const iconColor: string = isLoading || disabled
-    ? colors.icon.subtle
-    : emphasis === 'Bold'
-      ? colors.icon.onhighlight
-      : colors.icon.bold;
+  const iconColor: string = overrideTextColor
+    ? overrideTextColor
+    : isLoading || disabled
+      ? colors.icon.subtle
+      : emphasis === 'Bold'
+        ? colors.icon.onhighlight
+        : colors.icon.bold;
 
   // ── Text style (Medium = 500, Light = 300) ──────────────
   const labelStyle: TextStyle =

@@ -122,6 +122,11 @@ export default function SearchScreen() {
               ctaColor={card.ctaColor}
               ctaTextColor={card.ctaTextColor}
               onCtaPress={() => handleCtaPress(card.id)}
+              onPress={
+                selectedTag === 0
+                  ? () => navigation.navigate('Club', { clubId: card.id })
+                  : undefined
+              }
             />
           ))}
         </View>
@@ -140,7 +145,7 @@ const styles = StyleSheet.create({
 
   content: {
     paddingTop: spacer['64'],
-    paddingBottom: spacer['96'],
+    paddingBottom: 94,
   },
 
   // Header

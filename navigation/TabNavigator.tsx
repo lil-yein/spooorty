@@ -23,9 +23,9 @@ import BottomNav from '../components/ui/BottomNav';
 import type { RootTabParamList } from './types';
 
 import DiscoverStack from './DiscoverStack';
-import CalendarScreen from '../screens/CalendarScreen';
+import CalendarStack from './CalendarStack';
 import CreateScreen from '../screens/CreateScreen';
-import ProfileScreen from '../screens/ProfileScreen';
+import ProfileStack from './ProfileStack';
 
 // ─── Custom tab bar adapter ────────────────────────────────
 
@@ -59,12 +59,15 @@ export default function TabNavigator() {
   return (
     <Tab.Navigator
       tabBar={(props) => <TabBarAdapter {...props} />}
-      screenOptions={{ headerShown: false }}
+      screenOptions={{
+        headerShown: false,
+        tabBarStyle: { position: 'absolute', borderTopWidth: 0, elevation: 0 },
+      }}
     >
       <Tab.Screen name="Discover" component={DiscoverStack} />
-      <Tab.Screen name="Calendar" component={CalendarScreen} />
+      <Tab.Screen name="Calendar" component={CalendarStack} />
       <Tab.Screen name="Create" component={CreateScreen} />
-      <Tab.Screen name="Profile" component={ProfileScreen} />
+      <Tab.Screen name="Profile" component={ProfileStack} />
     </Tab.Navigator>
   );
 }

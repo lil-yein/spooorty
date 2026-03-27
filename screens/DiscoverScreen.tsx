@@ -14,7 +14,7 @@ import { useNavigation } from '@react-navigation/native';
 import { colors } from '../lib/tokens/colors';
 import { spacer } from '../lib/tokens/spacing';
 import { textStyles } from '../lib/tokens/textStyles';
-import { Avatar, Button, CardLg, Icon } from '../components/ui';
+import { Avatar, Button, ClubCardLg, EventCardLg, Icon } from '../components/ui';
 import Tag from '../components/ui/Tag';
 import { CLUBS, EVENTS } from '../lib/data/mockData';
 
@@ -26,7 +26,8 @@ export default function DiscoverScreen() {
   const [selectedTag, setSelectedTag] = useState(0);
   const [joinedIds, setJoinedIds] = useState<Set<string>>(new Set());
 
-  const cards = selectedTag === 0 ? CLUBS : EVENTS;
+  const clubs = CLUBS;
+  const events = EVENTS;
 
   const handleCtaPress = (id: string) => {
     setJoinedIds((prev) => {
@@ -83,36 +84,52 @@ export default function DiscoverScreen() {
 
         {/* ── Cards List ─────────────────────────────────── */}
         <View style={styles.cardsSection}>
-          {cards.map((card) => (
-            <CardLg
-              key={card.id}
-              name={card.name}
-              dateTime={card.dateTime}
-              location={card.location}
-              level={card.level}
-              avatar={
-                <Avatar
-                  type="Image"
-                  size="Lg"
-                  showCount
-                  count={3}
+          {selectedTag === 0
+            ? clubs.map((card) => (
+                <ClubCardLg
+                  key={card.id}
+                  name={card.name}
+                  members={card.members}
+                  sports={card.sports}
+                  location={card.location}
+                  level={card.level}
+                  avatar={
+                    <Avatar type="Image" size="Lg" showCount count={3} />
+                  }
+                  mutualHighlight={card.mutualHighlight}
+                  mutualBody={card.mutualBody}
+                  price={card.price}
+                  state={joinedIds.has(card.id) ? 'Joined' : 'Enabled'}
+                  ctaLabel={card.ctaLabel}
+                  ctaColor={card.ctaColor}
+                  ctaTextColor={card.ctaTextColor}
+                  adminApproval={card.adminApproval}
+                  onCtaPress={() => handleCtaPress(card.id)}
+                  onPress={() => navigation.navigate('Club', { clubId: card.id })}
                 />
-              }
-              mutualHighlight={card.mutualHighlight}
-              mutualBody={card.mutualBody}
-              price={card.price}
-              state={joinedIds.has(card.id) ? 'Joined' : 'Enabled'}
-              ctaLabel={card.ctaLabel}
-              ctaColor={card.ctaColor}
-              ctaTextColor={card.ctaTextColor}
-              onCtaPress={() => handleCtaPress(card.id)}
-              onPress={
-                selectedTag === 0
-                  ? () => navigation.navigate('Club', { clubId: card.id })
-                  : () => navigation.navigate('Event', { eventId: card.id })
-              }
-            />
-          ))}
+              ))
+            : events.map((card) => (
+                <EventCardLg
+                  key={card.id}
+                  name={card.name}
+                  dateTime={card.dateTime}
+                  location={card.location}
+                  level={card.level}
+                  avatar={
+                    <Avatar type="Image" size="Lg" showCount count={3} />
+                  }
+                  mutualHighlight={card.mutualHighlight}
+                  mutualBody={card.mutualBody}
+                  price={card.price}
+                  state={joinedIds.has(card.id) ? 'Joined' : 'Enabled'}
+                  ctaLabel={card.ctaLabel}
+                  ctaColor={card.ctaColor}
+                  ctaTextColor={card.ctaTextColor}
+                  adminApproval={card.adminApproval}
+                  onCtaPress={() => handleCtaPress(card.id)}
+                  onPress={() => navigation.navigate('Event', { eventId: card.id })}
+                />
+              ))}
         </View>
       </ScrollView>
     </View>

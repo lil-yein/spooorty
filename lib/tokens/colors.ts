@@ -25,6 +25,7 @@ export const colors = {
     highlight: '#000000',
     onhighlight: '#FFFFFF',
     inverse: '#FFFFFF',
+    error: '#A20D0D',
   },
 
   // ─── Icon ───────────────────────────────────────────
@@ -34,6 +35,7 @@ export const colors = {
     highlight: '#000000',
     onhighlight: '#FFFFFF',
     inverse: '#FFFFFF',
+    error: '#A20D0D',
   },
 
   // ─── Border ─────────────────────────────────────────

@@ -27,7 +27,6 @@ import {
   Icon,
   Search,
   SearchContentItem,
-  BottomAction,
 } from '../components/ui';
 import { SPORTS } from '../lib/data/mockData';
 import type { DiscoverStackParamList } from '../navigation/DiscoverStack';
@@ -126,7 +125,7 @@ export default function SearchSportsScreen() {
           icon={({ color, size }) => (
             <Icon type="arrow backward" size={size} color={color} />
           )}
-          onPress={() => navigation.goBack()}
+          onPress={handleApply}
         />
       </View>
 
@@ -157,7 +156,7 @@ export default function SearchSportsScreen() {
               onPress={() => toggleSport(item)}
             />
           )}
-          SectionSeparatorComponent={() => <View style={styles.sectionGap} />}
+          renderSectionFooter={() => <View style={styles.sectionFooter} />}
           ItemSeparatorComponent={() => <View style={styles.itemGap} />}
           contentContainerStyle={styles.listContent}
           getItemLayout={undefined}
@@ -189,20 +188,6 @@ export default function SearchSportsScreen() {
             })}
           </View>
         </View>
-      </View>
-
-      {/* Bottom CTA */}
-      <View style={styles.bottomAction}>
-        <BottomAction showHomeIndicator={false}>
-          <Button
-            emphasis="Bold"
-            label="Apply"
-            trailingIcon={({ color, size }) => (
-              <Icon type="arrow forward" size={size} color={color} />
-            )}
-            onPress={handleApply}
-          />
-        </BottomAction>
       </View>
     </View>
   );
@@ -239,30 +224,32 @@ const styles = StyleSheet.create({
   },
 
   listContent: {
-    paddingHorizontal: spacer['24'],
-    paddingBottom: 94,
+    paddingLeft: spacer['24'],
+    paddingRight: spacer['8'],
+    paddingBottom: spacer['24'],
   },
 
   sectionHeader: {
     ...textStyles.title02Medium,
     color: colors.text.bold,
+    marginBottom: spacer['12'],
   },
 
-  sectionGap: {
+  sectionFooter: {
     height: spacer['24'],
   },
 
   itemGap: {
-    height: spacer['24'],
+    height: spacer['12'],
   },
 
   // Alphabet sidebar
   alphabetSidebar: {
     width: 20,
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'stretch',
+    alignSelf: 'stretch',
     gap: spacer['4'],
-    marginRight: spacer['4'],
   },
 
   alphabetLine: {
@@ -275,7 +262,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: spacer['8'],
+    paddingVertical: 0,
   },
 
   alphabetLetter: {
@@ -285,13 +272,5 @@ const styles = StyleSheet.create({
 
   alphabetLetterActive: {
     color: colors.text.bold,
-  },
-
-  bottomAction: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    alignItems: 'center',
   },
 });

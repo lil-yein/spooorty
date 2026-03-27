@@ -15,17 +15,16 @@
  */
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { View, Text, Pressable, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, Pressable, ScrollView, StyleSheet, Platform, type ViewStyle } from 'react-native';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import { colors } from '../lib/tokens/colors';
-import { spacer } from '../lib/tokens/spacing';
+import { spacer, borderRadius } from '../lib/tokens/spacing';
 import { textStyles } from '../lib/tokens/textStyles';
 import {
   Button,
   Icon,
   ButtonMultiSelect,
   Range,
-  BottomAction,
 } from '../components/ui';
 import { DEFAULT_FILTERS, type SearchFilters } from '../lib/data/mockData';
 import type { DiscoverStackParamList } from '../navigation/DiscoverStack';
@@ -117,6 +116,8 @@ export default function SearchFilterScreen() {
             selected={days}
             onToggle={toggleDay}
             display="Fill"
+            compactItems={['M', 'T', 'W', 'T', 'F', 'S', 'S']}
+            compactBreakpoint={355}
           />
         </View>
 
@@ -157,17 +158,19 @@ export default function SearchFilterScreen() {
       </ScrollView>
 
       {/* Bottom CTA */}
-      <View style={styles.bottomAction}>
-        <BottomAction showHomeIndicator={false}>
-          <Button
-            emphasis="Bold"
-            label="Apply"
-            trailingIcon={({ color, size }) => (
-              <Icon type="arrow forward" size={size} color={color} />
-            )}
-            onPress={handleSearch}
-          />
-        </BottomAction>
+      <View style={styles.bottomActionWrap}>
+        <View style={styles.bottomActionInner}>
+          <View style={styles.bottomActionRow}>
+            <Button
+              emphasis="Bold"
+              label="Apply"
+              leadingIcon={({ color, size }) => (
+                <Icon type="search" size={size} color={color} />
+              )}
+              onPress={handleSearch}
+            />
+          </View>
+        </View>
       </View>
     </View>
   );
@@ -211,11 +214,27 @@ const styles = StyleSheet.create({
     color: colors.text.bold,
   },
 
-  bottomAction: {
+  bottomActionWrap: {
     position: 'absolute',
-    bottom: 0,
+    bottom: 60,
     left: 0,
     right: 0,
     alignItems: 'center',
   },
+
+  bottomActionInner: {
+    width: '100%',
+    paddingHorizontal: spacer['24'],
+  },
+
+  bottomActionRow: {
+    borderRadius: borderRadius['16'],
+    backgroundColor: colors.surface.blur,
+    overflow: 'hidden',
+    paddingHorizontal: spacer['16'],
+    paddingVertical: spacer['12'],
+    ...(Platform.OS === 'web'
+      ? { backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }
+      : {}),
+  } as ViewStyle,
 });

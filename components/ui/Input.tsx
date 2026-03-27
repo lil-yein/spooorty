@@ -21,7 +21,7 @@ import {
   StyleSheet,
   type TextInputProps,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Icon from './Icon';
 import { colors } from '../../lib/tokens/colors';
 import { spacer } from '../../lib/tokens/spacing';
 import { borderRadius } from '../../lib/tokens/spacing';
@@ -69,8 +69,8 @@ export default function Input({
         {...rest}
       />
       <View style={styles.iconWrap}>
-        <Ionicons
-          name="pencil-outline"
+        <Icon
+          type="edit"
           size={12}
           color={value ? colors.icon.bold : colors.icon.subtle}
         />

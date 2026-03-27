@@ -203,8 +203,8 @@ export default function ClubScreen() {
               <Divider />
               <View style={styles.infoRow}>
                 <View style={styles.infoCol}>
-                  <Text style={styles.infoLabel}>Date/ Time</Text>
-                  <Text style={styles.infoValue}>{club.dateTime}</Text>
+                  <Text style={styles.infoLabel}>Type</Text>
+                  <Text style={styles.infoValue}>{club.sports ?? 'Pickleball'}</Text>
                 </View>
                 <View style={styles.verticalDividerWrap}>
                   <View style={styles.verticalDivider} />
@@ -285,6 +285,18 @@ export default function ClubScreen() {
               {selectedTab === 0 ? (
                 /* Events tab */
                 <View style={styles.tabContent}>
+                  {isAdmin && (
+                    <Button
+                      emphasis="Subtle"
+                      content="Text"
+                      size="Md"
+                      label="Add Event  +"
+                      onPress={() => navigation.navigate('Create', {
+                        screen: 'CreateEvent',
+                        params: { associatedClubId: clubId },
+                      })}
+                    />
+                  )}
                   {clubEvents.length > 0 ? (
                     clubEvents.map((event) => (
                       <InnerContentCard
@@ -320,7 +332,7 @@ export default function ClubScreen() {
                 </View>
               ) : (
                 /* Members tab */
-                <View style={styles.tabContent}>
+                <View style={styles.membersTabContent}>
                   <Search
                     value={memberSearch}
                     onChangeText={setMemberSearch}
@@ -328,7 +340,7 @@ export default function ClubScreen() {
                   />
 
                   {filteredFriends.length > 0 && (
-                    <>
+                    <View style={styles.membersSection}>
                       <Text style={styles.membersSectionTitle}>Friends</Text>
                       <View style={styles.membersList}>
                         {filteredFriends.map((friend) => (
@@ -341,11 +353,11 @@ export default function ClubScreen() {
                           />
                         ))}
                       </View>
-                    </>
+                    </View>
                   )}
 
                   {filteredOthers.length > 0 && (
-                    <>
+                    <View style={styles.membersSection}>
                       <Text style={styles.membersSectionTitle}>
                         Other Members
                       </Text>
@@ -383,7 +395,7 @@ export default function ClubScreen() {
                           );
                         })}
                       </View>
-                    </>
+                    </View>
                   )}
                 </View>
               )}
@@ -409,6 +421,20 @@ export default function ClubScreen() {
                   onPress={handleJoinToggle}
                 />
               </View>
+            ) : club.adminApproval ? (
+              <Pressable
+                style={[styles.joinButton, { backgroundColor: club.ctaColor }]}
+                onPress={handleJoinToggle}
+              >
+                <Text style={[styles.joinButtonText, { color: club.ctaTextColor }]}>
+                  Request
+                </Text>
+                <Icon
+                  type="lock"
+                  size={16}
+                  color={club.ctaTextColor}
+                />
+              </Pressable>
             ) : (
               <Pressable
                 style={[styles.joinButton, { backgroundColor: club.ctaColor }]}
@@ -545,6 +571,7 @@ const styles = StyleSheet.create({
     color: colors.text.bold,
   },
 
+
   infoValue: {
     ...textStyles.body03Light,
     color: colors.text.bold,
@@ -623,6 +650,16 @@ const styles = StyleSheet.create({
     gap: spacer['12'],
   },
 
+  membersTabContent: {
+    paddingHorizontal: spacer['16'],
+    paddingVertical: spacer['16'],
+    gap: spacer['24'],
+  },
+
+  membersSection: {
+    gap: spacer['12'],
+  },
+
   membersSectionTitle: {
     ...textStyles.title02Medium,
     color: colors.text.bold,
@@ -637,6 +674,19 @@ const styles = StyleSheet.create({
     color: colors.text.subtle,
     textAlign: 'center',
     paddingVertical: spacer['24'],
+  },
+
+  addEventRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacer['8'],
+    paddingVertical: spacer['12'],
+  },
+
+  addEventText: {
+    ...textStyles.title02Medium,
+    color: colors.text.bold,
   },
 
   // Bottom action (above bottom nav: paddingTop 24 + icon 36 = 60)

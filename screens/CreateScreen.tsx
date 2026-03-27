@@ -8,14 +8,19 @@
 
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { colors } from '../lib/tokens/colors';
 import { spacer, borderRadius } from '../lib/tokens/spacing';
 import { textStyles } from '../lib/tokens/textStyles';
 import { Button, Icon } from '../components/ui';
+import type { CreateStackParamList } from '../navigation/CreateStack';
 
 // ─── Component ──────────────────────────────────────────
 
 export default function CreateScreen() {
+  const navigation = useNavigation<NativeStackNavigationProp<CreateStackParamList>>();
+
   return (
     <View style={styles.container}>
       {/* ── Content (centered) ───────────────────────────── */}
@@ -25,10 +30,12 @@ export default function CreateScreen() {
           <View style={styles.sectionWrapper}>
             <View style={styles.sectionInner}>
               <View style={styles.sectionContent}>
-                <Text style={styles.sectionTitle}>Club</Text>
-                <Text style={styles.sectionDesc}>
-                  Create your own club to manage members and host events!
-                </Text>
+                <View style={styles.sectionTextGroup}>
+                  <Text style={styles.sectionTitle}>Club</Text>
+                  <Text style={styles.sectionDesc}>
+                    Create your own club to manage members and host events!
+                  </Text>
+                </View>
                 <Button
                   emphasis="Bold"
                   label="Create Club"
@@ -37,7 +44,7 @@ export default function CreateScreen() {
                     <Icon type="arrow forward" size={size} color={color} />
                   )}
                   onPress={() => {
-                    // TODO: navigate to Create Club flow
+                    navigation.navigate('CreateClub');
                   }}
                 />
               </View>
@@ -48,11 +55,13 @@ export default function CreateScreen() {
           <View style={styles.sectionWrapper}>
             <View style={styles.sectionInner}>
               <View style={styles.sectionContent}>
-                <Text style={styles.sectionTitle}>Event</Text>
-                <Text style={styles.sectionDesc}>
-                  Create your own one-time or regular event to share with your
-                  friends!
-                </Text>
+                <View style={styles.sectionTextGroup}>
+                  <Text style={styles.sectionTitle}>Event</Text>
+                  <Text style={styles.sectionDesc}>
+                    Create your own one-time or regular event to share with your
+                    friends!
+                  </Text>
+                </View>
                 <Button
                   emphasis="Bold"
                   label="Create Event"
@@ -61,7 +70,7 @@ export default function CreateScreen() {
                     <Icon type="arrow forward" size={size} color={color} />
                   )}
                   onPress={() => {
-                    // TODO: navigate to Create Event flow
+                    navigation.navigate('CreateEvent');
                   }}
                 />
               </View>
@@ -79,20 +88,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.surface.bold,
-  },
-
-  /* Top nav */
-  topNav: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingTop: spacer['64'],
-    paddingHorizontal: spacer['24'],
+    paddingTop: 50,
   },
 
   /* Content — centred vertically between top nav and bottom nav */
@@ -140,5 +136,10 @@ const styles = StyleSheet.create({
   sectionDesc: {
     ...textStyles.body01Light,
     color: colors.text.bold,
+  },
+
+  /* Group title + description with tighter gap */
+  sectionTextGroup: {
+    gap: spacer['12'],
   },
 });

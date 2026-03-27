@@ -265,7 +265,7 @@ export default function EventScreen() {
                 />
 
                 {filteredFriends.length > 0 && (
-                  <>
+                  <View style={styles.membersSection}>
                     <Text style={styles.membersSectionTitle}>Friends</Text>
                     <View style={styles.membersList}>
                       {filteredFriends.map((friend) => (
@@ -278,11 +278,11 @@ export default function EventScreen() {
                         />
                       ))}
                     </View>
-                  </>
+                  </View>
                 )}
 
                 {filteredOthers.length > 0 && (
-                  <>
+                  <View style={styles.membersSection}>
                     <Text style={styles.membersSectionTitle}>
                       Other Members
                     </Text>
@@ -320,7 +320,7 @@ export default function EventScreen() {
                         );
                       })}
                     </View>
-                  </>
+                  </View>
                 )}
               </View>
             </View>
@@ -345,6 +345,20 @@ export default function EventScreen() {
                   onPress={handleJoinToggle}
                 />
               </View>
+            ) : event.adminApproval ? (
+              <Pressable
+                style={[styles.joinButton, { backgroundColor: event.ctaColor }]}
+                onPress={handleJoinToggle}
+              >
+                <Text style={[styles.joinButtonText, { color: event.ctaTextColor }]}>
+                  Request
+                </Text>
+                <Icon
+                  type="lock"
+                  size={16}
+                  color={event.ctaTextColor}
+                />
+              </Pressable>
             ) : (
               <Pressable
                 style={[styles.joinButton, { backgroundColor: event.ctaColor }]}
@@ -546,6 +560,10 @@ const styles = StyleSheet.create({
   membersContent: {
     paddingHorizontal: spacer['16'],
     paddingVertical: spacer['16'],
+    gap: spacer['24'],
+  },
+
+  membersSection: {
     gap: spacer['12'],
   },
 

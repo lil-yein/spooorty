@@ -12,7 +12,7 @@ import { View, ScrollView, StyleSheet } from 'react-native';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import { colors } from '../lib/tokens/colors';
 import { spacer } from '../lib/tokens/spacing';
-import { Avatar, Button, CardLg, Icon, Search } from '../components/ui';
+import { Avatar, Button, ClubCardLg, EventCardLg, Icon, Search } from '../components/ui';
 import Tag from '../components/ui/Tag';
 import { CLUBS, EVENTS, DEFAULT_FILTERS, type SearchFilters } from '../lib/data/mockData';
 import type { DiscoverStackParamList } from '../navigation/DiscoverStack';
@@ -33,13 +33,17 @@ export default function SearchScreen() {
   const filters: SearchFilters = route.params?.filters ?? DEFAULT_FILTERS;
 
   // Filter cards by query text (name match)
-  const sourceCards = selectedTag === 0 ? CLUBS : EVENTS;
-
-  const cards = useMemo(() => {
+  const filteredClubs = useMemo(() => {
     if (query.length === 0) return [];
     const q = query.toLowerCase();
-    return sourceCards.filter((c) => c.name.toLowerCase().includes(q));
-  }, [query, sourceCards]);
+    return CLUBS.filter((c) => c.name.toLowerCase().includes(q));
+  }, [query]);
+
+  const filteredEvents = useMemo(() => {
+    if (query.length === 0) return [];
+    const q = query.toLowerCase();
+    return EVENTS.filter((c) => c.name.toLowerCase().includes(q));
+  }, [query]);
 
   const handleCtaPress = useCallback((id: string) => {
     setJoinedIds((prev) => {
@@ -104,31 +108,52 @@ export default function SearchScreen() {
 
         {/* ── Cards List ─────────────────────────────────── */}
         <View style={styles.cardsSection}>
-          {cards.map((card) => (
-            <CardLg
-              key={card.id}
-              name={card.name}
-              dateTime={card.dateTime}
-              location={card.location}
-              level={card.level}
-              avatar={
-                <Avatar type="Image" size="Lg" showCount count={3} />
-              }
-              mutualHighlight={card.mutualHighlight}
-              mutualBody={card.mutualBody}
-              price={card.price}
-              state={joinedIds.has(card.id) ? 'Joined' : 'Enabled'}
-              ctaLabel={card.ctaLabel}
-              ctaColor={card.ctaColor}
-              ctaTextColor={card.ctaTextColor}
-              onCtaPress={() => handleCtaPress(card.id)}
-              onPress={
-                selectedTag === 0
-                  ? () => navigation.navigate('Club', { clubId: card.id })
-                  : undefined
-              }
-            />
-          ))}
+          {selectedTag === 0
+            ? filteredClubs.map((card) => (
+                <ClubCardLg
+                  key={card.id}
+                  name={card.name}
+                  members={card.members}
+                  sports={card.sports}
+                  location={card.location}
+                  level={card.level}
+                  avatar={
+                    <Avatar type="Image" size="Lg" showCount count={3} />
+                  }
+                  mutualHighlight={card.mutualHighlight}
+                  mutualBody={card.mutualBody}
+                  price={card.price}
+                  state={joinedIds.has(card.id) ? 'Joined' : 'Enabled'}
+                  ctaLabel={card.ctaLabel}
+                  ctaColor={card.ctaColor}
+                  ctaTextColor={card.ctaTextColor}
+                  adminApproval={card.adminApproval}
+                  onCtaPress={() => handleCtaPress(card.id)}
+                  onPress={() => navigation.navigate('Club', { clubId: card.id })}
+                />
+              ))
+            : filteredEvents.map((card) => (
+                <EventCardLg
+                  key={card.id}
+                  name={card.name}
+                  dateTime={card.dateTime}
+                  location={card.location}
+                  level={card.level}
+                  avatar={
+                    <Avatar type="Image" size="Lg" showCount count={3} />
+                  }
+                  mutualHighlight={card.mutualHighlight}
+                  mutualBody={card.mutualBody}
+                  price={card.price}
+                  state={joinedIds.has(card.id) ? 'Joined' : 'Enabled'}
+                  ctaLabel={card.ctaLabel}
+                  ctaColor={card.ctaColor}
+                  ctaTextColor={card.ctaTextColor}
+                  adminApproval={card.adminApproval}
+                  onCtaPress={() => handleCtaPress(card.id)}
+                  onPress={() => navigation.navigate('Event', { eventId: card.id })}
+                />
+              ))}
         </View>
       </ScrollView>
     </View>

@@ -18,7 +18,7 @@ import { textStyles } from '../lib/tokens/textStyles';
 import {
   Avatar,
   Button,
-  CardLg,
+  ClubCardLg,
   Divider,
   Icon,
   MembersItem,
@@ -179,10 +179,11 @@ export default function MyProfileScreen() {
           <Text style={styles.sectionTitle}>Club</Text>
           <View style={styles.cardsList}>
             {(showAllClubs ? clubs : clubs.slice(0, 2)).map((club) => (
-              <CardLg
+              <ClubCardLg
                 key={club.id}
                 name={club.name}
-                dateTime={club.dateTime}
+                members={club.members}
+                sports={club.sports}
                 location={club.location}
                 level={club.level}
                 avatar={
@@ -195,6 +196,7 @@ export default function MyProfileScreen() {
                 ctaLabel={club.ctaLabel}
                 ctaColor={club.ctaColor}
                 ctaTextColor={club.ctaTextColor}
+                adminApproval={club.adminApproval}
                 onCtaPress={() => handleCtaPress(club.id)}
                 onPress={() => navigation.navigate('Club', { clubId: club.id })}
               />
@@ -461,7 +463,7 @@ const styles = StyleSheet.create({
 
   suggestionList: {
     flex: 1,
-    gap: spacer['12'],
+    gap: spacer['24'],
   },
 
   groupBlock: {

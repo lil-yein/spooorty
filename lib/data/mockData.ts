@@ -6,17 +6,20 @@
  */
 
 import { colors } from '../tokens/colors';
-import type { CardLgProps } from '../../components/ui';
+import type { EventCardLgProps, ClubCardLgProps } from '../../components/ui';
 
-// ─── Card data type (without avatar — built in render) ──
-export type CardData = Omit<CardLgProps, 'avatar' | 'onCtaPress'> & { id: string };
+// ─── Card data types (without avatar — built in render) ──
+export type CardData = Omit<EventCardLgProps, 'avatar' | 'onCtaPress'> & { id: string };
+export type ClubCardData = Omit<ClubCardLgProps, 'avatar' | 'onCtaPress'> & { id: string };
 
 // ─── Clubs ──────────────────────────────────────────────
-export const CLUBS: CardData[] = [
+export const CLUBS: ClubCardData[] = [
   {
     id: 'club-1',
     name: 'COOL PICKLEBALL CLUB',
-    dateTime: '12/31 2024 12:30PM',
+    members: '4 Members',
+
+    sports: 'Pickleball',
     location: 'New York, NY',
     level: 1,
     mutualHighlight: 'Ling +3',
@@ -29,7 +32,9 @@ export const CLUBS: CardData[] = [
   {
     id: 'club-2',
     name: 'FUN HOCKEY GAME',
-    dateTime: '01/15 2025 6:00PM',
+    members: '4 Members',
+
+    sports: 'Hockey',
     location: 'Brooklyn, NY',
     level: 3,
     mutualHighlight: 'Alex +2',
@@ -42,7 +47,9 @@ export const CLUBS: CardData[] = [
   {
     id: 'club-3',
     name: 'SATURDAY RUNNING CREW',
-    dateTime: 'Every Sat 8:00AM',
+    members: '3 Members',
+
+    sports: 'Running',
     location: 'Central Park, NY',
     level: 2,
     mutualHighlight: 'Sam +5',
@@ -55,7 +62,9 @@ export const CLUBS: CardData[] = [
   {
     id: 'club-4',
     name: 'EXCITING HANDBALL TEAM',
-    dateTime: '02/10 2025 2:00PM',
+    members: '3 Members',
+
+    sports: 'Handball',
     location: 'Queens, NY',
     level: 2,
     mutualHighlight: 'Mia +1',
@@ -64,11 +73,14 @@ export const CLUBS: CardData[] = [
     ctaLabel: 'Join Club',
     ctaColor: '#66AAEF',
     ctaTextColor: colors.text.bold,
+    adminApproval: true,
   },
   {
     id: 'club-5',
     name: 'WEEKEND TENNIS LEAGUE',
-    dateTime: 'Every Sun 10:00AM',
+    members: '4 Members',
+
+    sports: 'Tennis',
     location: 'Flushing Meadows, NY',
     level: 3,
     mutualHighlight: 'Jake +4',
@@ -107,41 +119,75 @@ export const EVENTS: CardData[] = [
     ctaLabel: 'Join Event',
     ctaColor: '#FF834F',
     ctaTextColor: colors.text.bold,
+    adminApproval: true,
   },
 ];
 
-// ─── Sports list (alphabetical) ─────────────────────────
+// ─── Sports / activity list (alphabetical) ──────────────
 export const SPORTS: string[] = [
   'Archery',
   'Badminton',
   'Baseball',
   'Basketball',
+  'Bowling',
   'Boxing',
+  'Canoeing',
+  'Cheerleading',
   'Cricket',
+  'CrossFit',
+  'Curling',
   'Cycling',
+  'Dance',
+  'Disc Golf',
+  'Dodgeball',
   'Fencing',
+  'Field Hockey',
+  'Figure Skating',
+  'Flag Football',
   'Football',
   'Golf',
   'Gymnastics',
+  'Handball',
+  'Hiking',
   'Hockey',
   'Judo',
+  'Karate',
+  'Kayaking',
+  'Kickball',
   'Kickboxing',
   'Lacrosse',
+  'Martial Arts',
   'MMA',
+  'Network',
+  'Other',
+  'Paddleboarding',
   'Pickleball',
+  'Pilates',
   'Racquetball',
   'Rock Climbing',
   'Rowing',
   'Rugby',
   'Running',
+  'Sailing',
+  'Skateboarding',
   'Skating',
   'Skiing',
+  'Snowboarding',
   'Soccer',
+  'Softball',
   'Squash',
+  'Surfing',
   'Swimming',
   'Table Tennis',
+  'Taekwondo',
   'Tennis',
+  'Track & Field',
+  'Trail Running',
+  'Triathlon',
   'Volleyball',
+  'Walking',
+  'Water Polo',
+  'Weightlifting',
   'Wrestling',
   'Yoga',
 ];
@@ -191,6 +237,7 @@ export const CALENDAR_EVENTS: CalendarEvent[] = [
     ctaLabel: 'Request to Join',
     ctaColor: '#FFB854',
     ctaTextColor: colors.text.bold,
+    adminApproval: true,
   },
   {
     id: 'cal-4',
@@ -247,6 +294,7 @@ export const CALENDAR_EVENTS: CalendarEvent[] = [
     ctaLabel: 'Request to Join',
     ctaColor: '#FFB854',
     ctaTextColor: colors.text.bold,
+    adminApproval: true,
   },
   {
     id: 'cal-8',
@@ -312,14 +360,11 @@ export function getEventCountsForMonth(year: number, month: number): Record<numb
 /** Find the nearest upcoming date with events from a given date */
 export function getNearestEventDay(year: number, month: number, fromDay: number): number | null {
   const eventDays = getEventDaysForMonth(year, month);
-  // Try today first
+  // Try selected day first
   if (eventDays.includes(fromDay)) return fromDay;
-  // Try upcoming days in this month
-  const upcoming = eventDays.filter((d) => d > fromDay);
+  // Only show upcoming events, never previous
+  const upcoming = eventDays.filter((d) => d >= fromDay);
   if (upcoming.length > 0) return upcoming[0];
-  // Try earlier days as fallback
-  const earlier = eventDays.filter((d) => d < fromDay);
-  if (earlier.length > 0) return earlier[earlier.length - 1];
   return null;
 }
 
@@ -473,6 +518,7 @@ export type ClubDetail = {
   id: string;
   description: string;
   vibe: string;
+  sports: string;
   adminIds: string[];
   memberIds: string[];
   eventIds: string[];
@@ -485,6 +531,7 @@ export const CLUB_DETAILS: Record<string, ClubDetail> = {
     description:
       'A fun and welcoming pickleball club for players of all levels. We meet weekly for games, drills, and social events.',
     vibe: 'Casual',
+    sports: 'Pickleball',
     adminIds: ['user-me'],
     memberIds: ['user-me', 'user-1', 'user-2', 'user-6'],
     eventIds: ['event-1'],
@@ -495,6 +542,7 @@ export const CLUB_DETAILS: Record<string, ClubDetail> = {
     description:
       'Competitive hockey games every week. We play hard but fair. Looking for skilled players who love the game.',
     vibe: 'Competitive',
+    sports: 'Hockey',
     adminIds: ['user-3'],
     memberIds: ['user-me', 'user-1', 'user-3', 'user-7'],
     eventIds: ['event-2'],
@@ -505,6 +553,7 @@ export const CLUB_DETAILS: Record<string, ClubDetail> = {
     description:
       'We run every Saturday rain or shine. All paces welcome. Great way to explore Central Park trails!',
     vibe: 'Casual',
+    sports: 'Running',
     adminIds: ['user-2'],
     memberIds: ['user-2', 'user-4', 'user-9'],
     eventIds: [],
@@ -515,6 +564,7 @@ export const CLUB_DETAILS: Record<string, ClubDetail> = {
     description:
       'Handball enthusiasts unite! Weekly practice sessions and friendly matches in Queens.',
     vibe: 'Moderate',
+    sports: 'Handball',
     adminIds: ['user-me'],
     memberIds: ['user-me', 'user-5', 'user-8'],
     eventIds: [],
@@ -525,6 +575,7 @@ export const CLUB_DETAILS: Record<string, ClubDetail> = {
     description:
       'Sunday morning tennis league with round-robin tournaments. Intermediate to advanced players.',
     vibe: 'Competitive',
+    sports: 'Tennis',
     adminIds: ['user-1'],
     memberIds: ['user-me', 'user-1', 'user-4', 'user-6'],
     eventIds: [],
@@ -568,7 +619,7 @@ export function getClubAdmins(clubId: string): UserProfile[] {
 
 // ─── User/profile helpers ───────────────────────────────
 
-export function getUserClubs(userId: string): CardData[] {
+export function getUserClubs(userId: string): ClubCardData[] {
   const allUsers = [CURRENT_USER, ...USERS];
   const user = allUsers.find((u) => u.id === userId);
   if (!user) return [];

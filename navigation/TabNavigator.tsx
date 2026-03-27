@@ -24,7 +24,7 @@ import type { RootTabParamList } from './types';
 
 import DiscoverStack from './DiscoverStack';
 import CalendarStack from './CalendarStack';
-import CreateScreen from '../screens/CreateScreen';
+import CreateStack from './CreateStack';
 import ProfileStack from './ProfileStack';
 
 // ─── Custom tab bar adapter ────────────────────────────────
@@ -66,7 +66,7 @@ export default function TabNavigator() {
     >
       <Tab.Screen name="Discover" component={DiscoverStack} />
       <Tab.Screen name="Calendar" component={CalendarStack} />
-      <Tab.Screen name="Create" component={CreateScreen} />
+      <Tab.Screen name="Create" component={CreateStack} />
       <Tab.Screen name="Profile" component={ProfileStack} />
     </Tab.Navigator>
   );

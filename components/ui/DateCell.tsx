@@ -61,9 +61,9 @@ export default function DateCell({
             {
               color: today ? colors.text.highlight : colors.text.bold,
               textAlign: 'center',
-              width: 20,
             },
           ]}
+          numberOfLines={1}
         >
           {day}
         </Text>

@@ -64,7 +64,8 @@ export type IconType =
   | 'add friend'
   | 'notification'
   | 'filter'
-  | 'camera';
+  | 'camera'
+  | 'info';
 
 export type IconVariant = 'filled' | 'outlined';
 
@@ -97,13 +98,14 @@ const FILLED_MAP: Record<IconType, string> = {
   'chevron Left': 'chevron-left',
   'clock': 'schedule',
   'setting': 'settings',
-  'add image': 'add-photo-alternate',
+  'add image': 'add-a-photo',
   'Instagram': 'logo-instagram', // special case — rendered via Ionicons
   'close': 'close',
   'add friend': 'person-add',
   'notification': 'notifications',
   'filter': 'tune',
   'camera': 'photo-camera',
+  'info': 'info-outline',
 };
 
 // ─── Outline overrides (only for icons with distinct outline glyphs) ──
@@ -117,6 +119,7 @@ const OUTLINE_OVERRIDES: Partial<Record<IconType, string>> = {
   'people': 'people-outline',
   'add friend': 'person-add-alt',
   'notification': 'notifications-none',
+  'add image': 'add-a-photo',
 };
 
 // ─── Ionicons outline overrides (for icons without MaterialIcons outline) ──

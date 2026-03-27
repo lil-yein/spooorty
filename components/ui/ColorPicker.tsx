@@ -118,12 +118,30 @@ export default function ColorPicker({
     barWidth.current = e.nativeEvent.layout.width;
   };
 
-  const pan = useRef(
+  const createPan = (fromIndicator: boolean) =>
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: () => true,
-      onPanResponderGrant: () => {
-        startHue.current = hueRef.current;
+      onPanResponderGrant: (e: GestureResponderEvent) => {
+        if (fromIndicator) {
+          // Drag from indicator: start from current hue
+          startHue.current = hueRef.current;
+        } else {
+          // Drag from bar: jump to tap position first
+          if (!barWidth.current) return;
+          const touchX =
+            Platform.OS === 'web'
+              ? (e.nativeEvent as any).offsetX
+              : e.nativeEvent.locationX;
+          if (touchX != null && !isNaN(touchX)) {
+            const pctTap = Math.min(Math.max(touchX / barWidth.current, 0), 1);
+            const newHue = percentToHue(pctTap);
+            onChangeHue?.(newHue);
+            startHue.current = newHue;
+          } else {
+            startHue.current = hueRef.current;
+          }
+        }
       },
       onPanResponderMove: (
         _e: GestureResponderEvent,
@@ -132,7 +150,6 @@ export default function ColorPicker({
         if (!barWidth.current) return;
         const startPct = startHue.current / 360;
         const deltaPct = gs.dx / barWidth.current;
-        // Allow free movement during drag (no clamping) so user feels the drag
         const rawPct = startPct + deltaPct;
         const clampedPct = Math.min(Math.max(rawPct, 0), 1);
         onChangeHue?.(percentToHue(clampedPct));
@@ -145,15 +162,16 @@ export default function ColorPicker({
         const startPct = startHue.current / 360;
         const deltaPct = gs.dx / barWidth.current;
         const rawPct = startPct + deltaPct;
-        // Snap to closest end when dragged past bounds
         if (rawPct < 0) {
           onChangeHue?.(0);
         } else if (rawPct > 1) {
           onChangeHue?.(360);
         }
       },
-    }),
-  ).current;
+    });
+
+  const indicatorPan = useRef(createPan(true)).current;
+  const barPan = useRef(createPan(false)).current;
 
   const pct = Math.min(Math.max(hue, 0), 360) / 360 * 100;
   const indicatorColor = hueToColor(hue);
@@ -166,12 +184,12 @@ export default function ColorPicker({
       {/* Indicator pin (SVG) */}
       <View
         style={[styles.indicatorWrap, { left: `${pct}%` }]}
-        {...pan.panHandlers}
+        {...indicatorPan.panHandlers}
       >
         <PinIndicator fillColor={indicatorColor} />
       </View>
 
-      {/* Gradient bar */}
+      {/* Gradient bar — draggable + tappable to select color */}
       <View
         style={[
           styles.bar,
@@ -179,6 +197,7 @@ export default function ColorPicker({
             ? ({ backgroundImage: webGradient } as any)
             : { backgroundColor: colors.surface.subtle },
         ]}
+        {...barPan.panHandlers}
       />
     </View>
   );

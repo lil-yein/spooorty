@@ -91,7 +91,8 @@ export default function Button({
     // Size
     size === 'Md' && content === 'Text' && styles.mdText,
     size === 'Md' && content === 'Icon' && styles.mdIcon,
-    size === 'Sm' && styles.smIcon,
+    size === 'Sm' && content === 'Text' && styles.smText,
+    size === 'Sm' && content === 'Icon' && styles.smIcon,
     // Emphasis
     emphasis === 'Bold' && styles.emphasisBold,
     emphasis === 'Subtle' && styles.emphasisSubtle,
@@ -120,7 +121,9 @@ export default function Button({
 
   // ── Text style (Medium = 500, Light = 300) ──────────────
   const labelStyle: TextStyle =
-    textStyle === 'Medium' ? textStyles.title02Medium : textStyles.title02Light;
+    size === 'Sm'
+      ? (textStyle === 'Medium' ? textStyles.body03Medium : textStyles.body03Light)
+      : (textStyle === 'Medium' ? textStyles.title02Medium : textStyles.title02Light);
 
   return (
     <Pressable
@@ -186,6 +189,14 @@ const styles = StyleSheet.create({
   mdIcon: {
     height: 48,
     padding: spacer['16'],
+  },
+
+  // Size: Sm + Text (fill container, smaller height)
+  smText: {
+    height: 36,
+    paddingHorizontal: spacer['12'],
+    paddingVertical: spacer['10'],
+    alignSelf: 'stretch',
   },
 
   // Size: Sm + Icon (hug content)

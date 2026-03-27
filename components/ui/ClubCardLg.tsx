@@ -1,37 +1,34 @@
 /**
- * CardLg component — mapped from Figma component documentation
+ * ClubCardLg component — club-specific large card
  *
- * Props (from Figma properties):
- *   name: string (Club/event title, displayed as-is)
- *   dateTime: string (date/time text)
+ * Similar to EventCardLg but shows Members + Location instead of Date/Time + Location.
+ *
+ * Props:
+ *   name: string (Club title)
+ *   members: string (member count text, e.g. "50 Members")
  *   location: string (location text)
  *   level: 1-5 (Levels indicator value)
- *   avatar: ReactNode (pre-configured Avatar, rendered in mutuals row)
+ *   avatar: ReactNode (pre-configured Avatar)
  *   mutualHighlight: string (bold portion, e.g. "Ling +3")
- *   mutualBody: string (light portion, e.g. "friends\nare members of this club")
- *   price: string (cost display, e.g. "$20")
- *   state: Enabled | Joined (card action state)
- *   ctaLabel: string (CTA button label, e.g. "Join Club")
- *   ctaColor: string (custom CTA button background color)
- *   ctaTextColor: string (CTA button text/icon color)
+ *   mutualBody: string (light portion)
+ *   price: string (cost display)
+ *   state: Enabled | Joined
+ *   ctaLabel: string
+ *   ctaColor: string
+ *   ctaTextColor: string
  *   onCtaPress: function
+ *   onPress: function
  *
- * Anatomy (from Figma docs):
- *   Outer: surface/subtle bg, spacer/8 padding, borderRadius/16, fills parent width
+ * Anatomy:
+ *   Outer: surface/subtle bg, spacer/8 padding, borderRadius/16
  *   Content: border/subtle 0.5px, borderRadius/16, overflow hidden, column
  *     Title: p spacer/16, headline02Medium, text/bold
- *     Divider (Subtle)
- *     Date/Time + Location: two flex-1 columns, vertical divider 84px
- *     Divider (Subtle)
- *     Levels: pt spacer/16, nesting Levels component (full width)
- *     Mutuals + Cost: pt spacer/16, px spacer/16
- *     Action: p spacer/16
- *       Enabled: custom-color CTA button w/ trailing arrow (full width)
- *       Joined: Subtle button (surface/bold bg, border/subtle, text/subtle "Joined" + checkmark)
- *
- * Requirements:
- *   Button color is customizable by user's selection during
- *   create/edit event/club flow.
+ *     Divider
+ *     Members + Location: two flex-1 columns, vertical divider 84px
+ *     Divider
+ *     Levels
+ *     Mutuals + Cost
+ *     Action
  */
 
 import React from 'react';
@@ -45,46 +42,37 @@ import Levels, { type LevelsProps } from './Levels';
 
 // ─── Types ──────────────────────────────────────────────
 
-export type CardLgState = 'Enabled' | 'Joined';
+export type ClubCardLgState = 'Enabled' | 'Joined';
 
-export type CardLgProps = {
-  /** Club/event title (displayed as-is, use uppercase for clubs) */
+export type ClubCardLgProps = {
   name: string;
-  /** Date/time string, e.g. "12/31 2024 12:30PM" */
-  dateTime?: string;
-  /** Location string, e.g. "New York, NY" */
+  /** Member count text, e.g. "50 Members" */
+  members?: string;
+  /** Sport name displayed in the Sports column */
+  sports?: string;
   location?: string;
-  /** Levels indicator (1–5) */
   level?: LevelsProps['indicator'];
-  /** Pre-configured Avatar node (render Avatar Lg externally) */
   avatar?: React.ReactNode;
-  /** Bold portion of mutual text, e.g. "Ling +3" */
   mutualHighlight?: string;
-  /** Light portion of mutual text, e.g. "friends\nare members of this club" */
   mutualBody?: string;
-  /** Price display, e.g. "$20" */
   price?: string;
-  /** Card action state */
-  state?: CardLgState;
-  /** CTA button label (for Enabled state) */
+  state?: ClubCardLgState;
   ctaLabel?: string;
-  /** Custom CTA button background color (user-customizable) */
   ctaColor?: string;
-  /** CTA button text/icon color (defaults to text/bold) */
   ctaTextColor?: string;
-  /** CTA button press handler */
   onCtaPress?: () => void;
-  /** Card body press handler (e.g. navigate to detail) */
   onPress?: () => void;
-  /** Override inner content background color (defaults to surface/subtle) */
   contentBg?: string;
+  /** When true, CTA shows "Request to Join" with lock icon (admin approval required) */
+  adminApproval?: boolean;
 };
 
 // ─── Component ──────────────────────────────────────────
 
-export default function CardLg({
+export default function ClubCardLg({
   name = 'COOL PICKLEBALL CLUB',
-  dateTime = '12/31 2024 12:30PM',
+  members = '50 Members',
+  sports = 'Pickleball',
   location = 'New York, NY',
   level = 1,
   avatar,
@@ -98,7 +86,8 @@ export default function CardLg({
   onCtaPress,
   onPress,
   contentBg,
-}: CardLgProps) {
+  adminApproval = false,
+}: ClubCardLgProps) {
   const isJoined = state === 'Joined';
 
   return (
@@ -112,12 +101,12 @@ export default function CardLg({
         {/* ── Divider ──────────────────────────────── */}
         <Divider />
 
-        {/* ── Date/Time + Location ─────────────────── */}
+        {/* ── Members + Location ─────────────────── */}
         <View style={styles.infoRow}>
-          {/* Left column: Date/Time */}
+          {/* Left column: Sports */}
           <View style={styles.infoCol}>
-            <Text style={styles.infoLabel}>Date/ Time</Text>
-            <Text style={styles.infoValue}>{dateTime}</Text>
+            <Text style={styles.infoLabel}>Type</Text>
+            <Text style={styles.infoValue}>{sports}</Text>
           </View>
 
           {/* Vertical divider */}
@@ -142,7 +131,6 @@ export default function CardLg({
 
         {/* ── Mutuals + Cost ───────────────────────── */}
         <View style={styles.mutualsRow}>
-          {/* Mutuals (avatar + text) */}
           <View style={styles.mutualsLeft}>
             {avatar}
             <Text style={styles.mutualTextWrap}>
@@ -151,7 +139,6 @@ export default function CardLg({
             </Text>
           </View>
 
-          {/* Cost pill */}
           <View style={styles.costPill}>
             <Text style={styles.costText}>{price}</Text>
           </View>
@@ -160,32 +147,22 @@ export default function CardLg({
         {/* ── Action ───────────────────────────────── */}
         <View style={styles.actionSection}>
           {isJoined ? (
-            /* Joined state: Subtle button with "Joined" + checkmark */
             <Pressable style={styles.joinedButton} onPress={onCtaPress}>
               <Text style={styles.joinedLabel}>Joined</Text>
               <View style={styles.ctaIconWrap}>
-                <Icon
-                  type="check"
-                  size={16}
-                  color={colors.text.subtle}
-                />
+                <Icon type="check" size={16} color={colors.text.subtle} />
               </View>
             </Pressable>
           ) : (
-            /* Enabled state: Custom-color CTA button with arrow */
             <Pressable
               style={[styles.ctaButton, { backgroundColor: ctaColor }]}
               onPress={onCtaPress}
             >
               <Text style={[styles.ctaLabel, { color: ctaTextColor }]}>
-                {ctaLabel}
+                {adminApproval ? 'Request to Join' : ctaLabel}
               </Text>
               <View style={styles.ctaIconWrap}>
-                <Icon
-                  type="arrow forward"
-                  size={16}
-                  color={ctaTextColor}
-                />
+                <Icon type={adminApproval ? "lock" : "arrow forward"} size={16} color={ctaTextColor} />
               </View>
             </Pressable>
           )}
@@ -198,14 +175,12 @@ export default function CardLg({
 // ─── Styles ─────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  // Outer container — fills parent width
   outer: {
     padding: spacer['8'],
     borderRadius: borderRadius['16'],
     backgroundColor: colors.surface.subtle,
   },
 
-  // Inner content frame
   content: {
     borderWidth: 0.5,
     borderColor: colors.border.subtle,
@@ -214,7 +189,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface.subtle,
   },
 
-  // ── Title ──────────────────────────────────────
   titleSection: {
     padding: spacer['16'],
     justifyContent: 'center',
@@ -225,7 +199,6 @@ const styles = StyleSheet.create({
     color: colors.text.bold,
   },
 
-  // ── Info row (Date/Time + Location) ────────────
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -256,7 +229,6 @@ const styles = StyleSheet.create({
     color: colors.text.bold,
   },
 
-  // Vertical divider between columns
   verticalDividerWrap: {
     height: 84,
     justifyContent: 'center',
@@ -270,13 +242,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.border.subtle,
   },
 
-  // ── Levels (full width) ─────────────────────────
   levelsSection: {
     paddingTop: spacer['16'],
     width: '100%',
   },
 
-  // ── Mutuals + Cost ─────────────────────────────
   mutualsRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -308,7 +278,6 @@ const styles = StyleSheet.create({
     color: colors.text.bold,
   },
 
-  // Cost pill
   costPill: {
     width: 63,
     borderWidth: 0.5,
@@ -325,12 +294,10 @@ const styles = StyleSheet.create({
     color: colors.text.bold,
   },
 
-  // ── Action ─────────────────────────────────────
   actionSection: {
     padding: spacer['16'],
   },
 
-  // Enabled state: custom-color CTA button (full width)
   ctaButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -345,7 +312,6 @@ const styles = StyleSheet.create({
     ...textStyles.title02Medium,
   },
 
-  // Joined state: Subtle button
   joinedButton: {
     flexDirection: 'row',
     alignItems: 'center',

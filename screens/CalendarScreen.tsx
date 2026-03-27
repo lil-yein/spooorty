@@ -17,7 +17,7 @@ import { useNavigation } from '@react-navigation/native';
 import { colors } from '../lib/tokens/colors';
 import { spacer } from '../lib/tokens/spacing';
 import { textStyles } from '../lib/tokens/textStyles';
-import { Avatar, Button, CardLg, Calendar, Icon } from '../components/ui';
+import { Avatar, Button, EventCardLg, Calendar, Icon } from '../components/ui';
 import {
   getEventsForDate,
   getEventDaysForMonth,
@@ -160,7 +160,7 @@ export default function CalendarScreen() {
             </Text>
 
             {events.map((event) => (
-                <CardLg
+                <EventCardLg
                   key={event.id}
                   name={event.name}
                   dateTime={event.dateTime}
@@ -176,6 +176,7 @@ export default function CalendarScreen() {
                   ctaLabel={event.ctaLabel}
                   ctaColor={event.ctaColor}
                   ctaTextColor={event.ctaTextColor}
+                  adminApproval={event.adminApproval}
                   onCtaPress={() => handleCtaPress(event.id)}
                   onPress={() => navigation.push('Event', { eventId: event.id })}
                 />

@@ -193,12 +193,11 @@ const styles = StyleSheet.create({
   weekdayRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingHorizontal: spacer['10'],
     paddingVertical: spacer['4'],
   },
 
   weekdayCell: {
-    width: 20,
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -207,7 +206,6 @@ const styles = StyleSheet.create({
     ...textStyles.body02Light,
     color: colors.text.subtle,
     textAlign: 'center',
-    width: 20,
   },
 
   // Weeks
@@ -217,12 +215,12 @@ const styles = StyleSheet.create({
 
   weekRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
   },
 
   dayCell: {
-    width: 40,
+    flex: 1,
     alignItems: 'center',
+    minWidth: 0,
   },
 
   emptyCell: {

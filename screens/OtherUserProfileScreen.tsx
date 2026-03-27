@@ -16,7 +16,7 @@ import { useNavigation, useRoute, type RouteProp } from '@react-navigation/nativ
 import { colors } from '../lib/tokens/colors';
 import { spacer } from '../lib/tokens/spacing';
 import { textStyles } from '../lib/tokens/textStyles';
-import { Avatar, Button, CardLg, Divider, Icon, MembersItem } from '../components/ui';
+import { Avatar, Button, ClubCardLg, Divider, Icon, MembersItem } from '../components/ui';
 import {
   USERS,
   INITIAL_FRIENDSHIP_STATUS,
@@ -135,10 +135,11 @@ export default function OtherUserProfileScreen() {
           <Text style={styles.sectionTitle}>Club</Text>
           <View style={styles.cardsList}>
             {(showAllClubs ? clubs : clubs.slice(0, 2)).map((club) => (
-              <CardLg
+              <ClubCardLg
                 key={club.id}
                 name={club.name}
-                dateTime={club.dateTime}
+                members={club.members}
+                sports={club.sports}
                 location={club.location}
                 level={club.level}
                 avatar={
@@ -151,6 +152,7 @@ export default function OtherUserProfileScreen() {
                 ctaLabel={club.ctaLabel}
                 ctaColor={club.ctaColor}
                 ctaTextColor={club.ctaTextColor}
+                adminApproval={club.adminApproval}
                 onCtaPress={() => handleCtaPress(club.id)}
                 onPress={() => navigation.navigate('Club', { clubId: club.id })}
               />

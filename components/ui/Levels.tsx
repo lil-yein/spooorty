@@ -25,7 +25,7 @@
  */
 
 import React, { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, type LayoutChangeEvent } from 'react-native';
+import { View, Text, Pressable, StyleSheet, type LayoutChangeEvent } from 'react-native';
 import { colors } from '../../lib/tokens/colors';
 import { spacer } from '../../lib/tokens/spacing';
 import { textStyles } from '../../lib/tokens/textStyles';
@@ -36,6 +36,8 @@ import Divider from './Divider';
 export type LevelsProps = {
   /** Currently selected level (1-5) */
   indicator?: 1 | 2 | 3 | 4 | 5;
+  /** Callback when a level label is tapped (makes levels interactive) */
+  onSelect?: (level: 1 | 2 | 3 | 4 | 5) => void;
 };
 
 // ─── Labels ─────────────────────────────────────────────
@@ -66,7 +68,7 @@ const triangleStyles = StyleSheet.create({
 
 // ─── Component ──────────────────────────────────────────
 
-export default function Levels({ indicator = 1 }: LevelsProps) {
+export default function Levels({ indicator = 1, onSelect }: LevelsProps) {
   const selectedIndex = indicator - 1;
   const [isCompact, setIsCompact] = useState(false);
 
@@ -83,8 +85,14 @@ export default function Levels({ indicator = 1 }: LevelsProps) {
       <View style={styles.labelsRow}>
         {labels.map((label, index) => {
           const isSelected = index === selectedIndex;
+          const level = (index + 1) as 1 | 2 | 3 | 4 | 5;
+          const Wrapper = onSelect ? Pressable : View;
           return (
-            <View key={label} style={styles.labelWrap}>
+            <Wrapper
+              key={label}
+              style={styles.labelWrap}
+              {...(onSelect ? { onPress: () => onSelect(level) } : {})}
+            >
               <Text
                 style={[
                   isSelected ? textStyles.body03Medium : textStyles.body03Light,
@@ -100,7 +108,7 @@ export default function Levels({ indicator = 1 }: LevelsProps) {
                   <Triangle />
                 </View>
               )}
-            </View>
+            </Wrapper>
           );
         })}
       </View>

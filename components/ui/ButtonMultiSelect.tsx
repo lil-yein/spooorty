@@ -17,8 +17,8 @@
  *   Allows multiple items to be selected at once
  */
 
-import React from 'react';
-import { View, Text, Pressable, StyleSheet, type ViewStyle } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { View, Text, Pressable, StyleSheet, type ViewStyle, type LayoutChangeEvent } from 'react-native';
 import { colors } from '../../lib/tokens/colors';
 import { spacer, borderRadius } from '../../lib/tokens/spacing';
 import { textStyles } from '../../lib/tokens/textStyles';
@@ -30,6 +30,10 @@ export type ButtonMultiSelectProps = {
   selected: number[];
   onToggle?: (index: number) => void;
   display?: 'Fill' | 'Hug';
+  /** Short labels used when container width < compactBreakpoint */
+  compactItems?: string[];
+  /** Width threshold to switch to compactItems (default 355) */
+  compactBreakpoint?: number;
 };
 
 // ─── Component ──────────────────────────────────────────
@@ -39,12 +43,23 @@ export default function ButtonMultiSelect({
   selected,
   onToggle,
   display = 'Fill',
+  compactItems,
+  compactBreakpoint = 355,
 }: ButtonMultiSelectProps) {
   const isFill = display === 'Fill';
+  const [isCompact, setIsCompact] = useState(false);
+
+  const handleLayout = useCallback((e: LayoutChangeEvent) => {
+    if (compactItems) {
+      setIsCompact(e.nativeEvent.layout.width < compactBreakpoint);
+    }
+  }, [compactItems, compactBreakpoint]);
+
+  const labels = isCompact && compactItems ? compactItems : items;
 
   return (
-    <View style={[styles.container, isFill && styles.containerFill]}>
-      {items.map((label, index) => {
+    <View style={[styles.container, isFill && styles.containerFill]} onLayout={handleLayout}>
+      {labels.map((label, index) => {
         const isSelected = selected.includes(index);
         return (
           <Pressable

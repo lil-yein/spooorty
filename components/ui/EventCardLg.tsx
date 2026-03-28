@@ -45,7 +45,7 @@ import Levels, { type LevelsProps } from './Levels';
 
 // ─── Types ──────────────────────────────────────────────
 
-export type EventCardLgState = 'Enabled' | 'Joined';
+export type EventCardLgState = 'Enabled' | 'Pending' | 'Joined';
 
 export type EventCardLgProps = {
   /** Club/event title (displayed as-is, use uppercase for clubs) */
@@ -103,6 +103,7 @@ export default function EventCardLg({
   adminApproval = false,
 }: EventCardLgProps) {
   const isJoined = state === 'Joined';
+  const isPending = state === 'Pending';
 
   return (
     <Pressable style={styles.outer} onPress={onPress}>
@@ -163,19 +164,20 @@ export default function EventCardLg({
         {/* ── Action ───────────────────────────────── */}
         <View style={styles.actionSection}>
           {isJoined ? (
-            /* Joined state: Subtle button with "Joined" + checkmark */
             <Pressable style={styles.joinedButton} onPress={onCtaPress}>
               <Text style={styles.joinedLabel}>Joined</Text>
               <View style={styles.ctaIconWrap}>
-                <Icon
-                  type="check"
-                  size={16}
-                  color={colors.text.subtle}
-                />
+                <Icon type="check" size={16} color={colors.text.subtle} />
+              </View>
+            </Pressable>
+          ) : isPending ? (
+            <Pressable style={styles.joinedButton} onPress={onCtaPress}>
+              <Text style={styles.joinedLabel}>Pending</Text>
+              <View style={styles.ctaIconWrap}>
+                <Icon type="clock" size={16} color={colors.text.subtle} />
               </View>
             </Pressable>
           ) : (
-            /* Enabled state: Custom-color CTA button with arrow */
             <Pressable
               style={[styles.ctaButton, { backgroundColor: ctaColor }]}
               onPress={onCtaPress}

@@ -82,6 +82,7 @@ export default function Button({
   disabled,
   overrideTextColor,
 }: ButtonProps) {
+  const iconSize = size === 'Sm' ? 12 : 16;
   const isLoading = state === 'Loading';
   const isDisabled = disabled || isLoading;
 
@@ -135,7 +136,7 @@ export default function Button({
         <>
           {leadingIcon && (
             <View style={styles.iconWrapper}>
-              {leadingIcon({ color: iconColor, size: 16 })}
+              {leadingIcon({ color: iconColor, size: iconSize })}
             </View>
           )}
 
@@ -147,7 +148,7 @@ export default function Button({
 
           {trailingIcon && (
             <View style={styles.iconWrapper}>
-              {trailingIcon({ color: iconColor, size: 16 })}
+              {trailingIcon({ color: iconColor, size: iconSize })}
             </View>
           )}
         </>
@@ -157,7 +158,7 @@ export default function Button({
           {isLoading ? (
             <ActivityIndicator size="small" color={iconColor} />
           ) : icon ? (
-            icon({ color: iconColor, size: 16 })
+            icon({ color: iconColor, size: iconSize })
           ) : null}
         </View>
       )}

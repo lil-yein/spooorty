@@ -42,7 +42,7 @@ import Levels, { type LevelsProps } from './Levels';
 
 // ─── Types ──────────────────────────────────────────────
 
-export type ClubCardLgState = 'Enabled' | 'Joined';
+export type ClubCardLgState = 'Enabled' | 'Pending' | 'Joined';
 
 export type ClubCardLgProps = {
   name: string;
@@ -89,6 +89,7 @@ export default function ClubCardLg({
   adminApproval = false,
 }: ClubCardLgProps) {
   const isJoined = state === 'Joined';
+  const isPending = state === 'Pending';
 
   return (
     <Pressable style={styles.outer} onPress={onPress}>
@@ -151,6 +152,13 @@ export default function ClubCardLg({
               <Text style={styles.joinedLabel}>Joined</Text>
               <View style={styles.ctaIconWrap}>
                 <Icon type="check" size={16} color={colors.text.subtle} />
+              </View>
+            </Pressable>
+          ) : isPending ? (
+            <Pressable style={styles.joinedButton} onPress={onCtaPress}>
+              <Text style={styles.joinedLabel}>Pending</Text>
+              <View style={styles.ctaIconWrap}>
+                <Icon type="clock" size={16} color={colors.text.subtle} />
               </View>
             </Pressable>
           ) : (

@@ -36,15 +36,18 @@ import {
   Avatar,
   Button,
   ColorPicker,
+  CoverPhotoModal,
   Divider,
   Icon,
   Levels,
   MembersItem,
   Search,
   SearchContentItem,
+  LocationSearchModal,
   Switch,
   Tag,
 } from '../components/ui';
+import type { SelectedLocation } from '../components/ui/LocationSearchModal';
 import {
   CURRENT_USER,
   CLUBS,
@@ -78,31 +81,14 @@ function groupByLetter(items: string[]): SportsSection[] {
     .map(([title, data]) => ({ title, data }));
 }
 
-// ─── Mock city data ────────────────────────────────────
-
-type CityData = {
-  id: string;
-  name: string;
-  state: string;
-};
-
-const CITIES: CityData[] = [
-  { id: 'city-1', name: 'New York', state: 'NY' },
-  { id: 'city-2', name: 'Brooklyn', state: 'NY' },
-  { id: 'city-3', name: 'Queens', state: 'NY' },
-  { id: 'city-4', name: 'Long Island City', state: 'NY' },
-  { id: 'city-5', name: 'Jersey City', state: 'NJ' },
-  { id: 'city-6', name: 'Hoboken', state: 'NJ' },
-  { id: 'city-7', name: 'Flushing', state: 'NY' },
-  { id: 'city-8', name: 'Williamsburg', state: 'NY' },
-];
-
 // ─── Component ──────────────────────────────────────────
 
 export default function CreateClubScreen() {
   const navigation = useNavigation<any>();
 
   // ── Form state ──
+  const [coverImageUri, setCoverImageUri] = useState<string | null>(null);
+  const [coverModalVisible, setCoverModalVisible] = useState(false);
   const [clubName, setClubName] = useState('');
 
   // Sports
@@ -110,10 +96,9 @@ export default function CreateClubScreen() {
   const [sportsModalVisible, setSportsModalVisible] = useState(false);
   const [sportsSearch, setSportsSearch] = useState('');
 
-  // Location (city-based)
-  const [citySearch, setCitySearch] = useState('');
-  const [cityExpanded, setCityExpanded] = useState(false);
-  const [selectedCityId, setSelectedCityId] = useState<string | null>(null);
+  // Location (Google Places)
+  const [locationExpanded, setLocationExpanded] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState<SelectedLocation | null>(null);
 
   // Fee
   const [isYearlyFee, setIsYearlyFee] = useState(false);
@@ -177,16 +162,6 @@ export default function CreateClubScreen() {
   const invitedMemberUsers = Array.from(invitedMemberIds)
     .map((id) => allUsers.find((u) => u.id === id))
     .filter(Boolean) as typeof allUsers;
-
-  const selectedCity = CITIES.find((c) => c.id === selectedCityId);
-
-  const filteredCities = citySearch.trim()
-    ? CITIES.filter(
-        (c) =>
-          c.name.toLowerCase().includes(citySearch.toLowerCase()) ||
-          c.state.toLowerCase().includes(citySearch.toLowerCase()),
-      )
-    : CITIES;
 
   // Sports filtering
   const filteredSports = useMemo(
@@ -322,9 +297,7 @@ export default function CreateClubScreen() {
     }
     setShowError(false);
 
-    const locationName = selectedCity
-      ? `${selectedCity.name}, ${selectedCity.state}`
-      : 'TBD';
+    const locationName = selectedLocation?.name ?? 'TBD';
 
     const memberCount = invitedMemberIds.size + 1; // +1 for creator
 
@@ -351,7 +324,7 @@ export default function CreateClubScreen() {
   }, [
     clubName,
     feeValue,
-    selectedCity,
+    selectedLocation,
     invitedMemberIds,
     levelIndicator,
     ctaColor,
@@ -360,62 +333,13 @@ export default function CreateClubScreen() {
 
   // ── Render helpers ──
 
-  const renderCityModal = () => (
-    <Modal
-      visible={cityExpanded}
-      transparent
-      animationType="fade"
-      onRequestClose={() => setCityExpanded(false)}
-    >
-      <View style={styles.modalOverlay}>
-        <Pressable
-          style={StyleSheet.absoluteFill}
-          onPress={() => setCityExpanded(false)}
-        />
-        <View style={styles.modalCard}>
-          <View style={styles.modalCardInner}>
-            <View style={styles.modalBackRow}>
-              <Button
-                emphasis="Subtle"
-                content="Icon"
-                size="Sm"
-                icon={({ color, size }) => (
-                  <Icon type="arrow backward" size={size} color={color} />
-                )}
-                onPress={() => setCityExpanded(false)}
-              />
-            </View>
-
-            <View style={styles.modalSearchWrap}>
-              <Search
-                value={citySearch}
-                onChangeText={setCitySearch}
-                placeholder="Search City"
-              />
-            </View>
-
-            <ScrollView
-              style={styles.modalScroll}
-              showsVerticalScrollIndicator={false}
-            >
-              <View style={styles.cityList}>
-                {filteredCities.map((city) => (
-                  <SearchContentItem
-                    key={city.id}
-                    label={`${city.name}, ${city.state}`}
-                    selected={selectedCityId === city.id}
-                    onPress={() => {
-                      setSelectedCityId(city.id);
-                      setCitySearch('');
-                    }}
-                  />
-                ))}
-              </View>
-            </ScrollView>
-          </View>
-        </View>
-      </View>
-    </Modal>
+  const renderLocationModal = () => (
+    <LocationSearchModal
+      visible={locationExpanded}
+      onClose={() => setLocationExpanded(false)}
+      onLocationSelected={(loc) => setSelectedLocation(loc)}
+      placeholder="Search City or Address"
+    />
   );
 
   const renderSportsModal = () => (
@@ -669,9 +593,17 @@ export default function CreateClubScreen() {
     <View style={styles.container}>
       {/* ── Hero Cover ────────────────────────────────────── */}
       <Image
-        source={{ uri: 'https://picsum.photos/800/1200' }}
+        source={{ uri: coverImageUri || 'https://picsum.photos/800/1200' }}
         style={styles.heroCover}
         resizeMode="cover"
+      />
+
+      {/* ── Cover Photo Modal ───────────────────────────── */}
+      <CoverPhotoModal
+        visible={coverModalVisible}
+        onClose={() => setCoverModalVisible(false)}
+        onImageSelected={setCoverImageUri}
+        context="club"
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -700,6 +632,7 @@ export default function CreateClubScreen() {
               icon={({ color, size }) => (
                 <Icon type="add image" size={size} color={color} />
               )}
+              onPress={() => setCoverModalVisible(true)}
             />
           </View>
 
@@ -742,23 +675,22 @@ export default function CreateClubScreen() {
 
               <Divider />
 
-              {/* Location (City) */}
+              {/* Location (Google Places) */}
               <View style={styles.fieldSection}>
                 <Text style={styles.fieldLabel}>Location</Text>
-                <Pressable onPress={() => setCityExpanded(true)}>
+                <Pressable onPress={() => setLocationExpanded(true)}>
                   <View style={styles.inputFullWidth}>
                     <Search
-                      value={
-                        selectedCity
-                          ? `${selectedCity.name}, ${selectedCity.state}`
-                          : ''
-                      }
+                      value={selectedLocation?.name ?? ''}
                       onChangeText={() => {}}
-                      placeholder="Search City"
+                      placeholder="Search City or Address"
                       editable={false}
                     />
                   </View>
                 </Pressable>
+                {selectedLocation?.address ? (
+                  <Text style={styles.locationAddress}>{selectedLocation.address}</Text>
+                ) : null}
               </View>
 
               <Divider />
@@ -1001,7 +933,7 @@ export default function CreateClubScreen() {
       </View>
 
       {/* ── Modals ──────────────────────────────────────────── */}
-      {renderCityModal()}
+      {renderLocationModal()}
       {renderSportsModal()}
       {renderMemberModal()}
 
@@ -1222,6 +1154,12 @@ const styles = StyleSheet.create({
     ...textStyles.title02Medium,
     color: colors.text.bold,
     flex: 1,
+  },
+
+  locationAddress: {
+    ...textStyles.body03Light,
+    color: colors.text.subtle,
+    marginTop: spacer['4'],
   },
 
   switchRow: {

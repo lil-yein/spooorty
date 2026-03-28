@@ -28,7 +28,7 @@ export default function SearchScreen() {
 
   const [query, setQuery] = useState(route.params?.query ?? '');
   const [selectedTag, setSelectedTag] = useState(0);
-  const [joinedIds, setJoinedIds] = useState<Set<string>>(new Set());
+  const [cardStates, setCardStates] = useState<Record<string, 'Pending' | 'Joined'>>({});
 
   const filters: SearchFilters = route.params?.filters ?? DEFAULT_FILTERS;
 
@@ -45,12 +45,16 @@ export default function SearchScreen() {
     return EVENTS.filter((c) => c.name.toLowerCase().includes(q));
   }, [query]);
 
-  const handleCtaPress = useCallback((id: string) => {
-    setJoinedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
+  const handleCtaPress = useCallback((id: string, adminApproval?: boolean) => {
+    setCardStates((prev) => {
+      const current = prev[id];
+      if (current === 'Joined') {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      }
+      if (current === 'Pending') return prev;
+      return { ...prev, [id]: adminApproval ? 'Pending' : 'Joined' };
     });
   }, []);
 
@@ -123,12 +127,12 @@ export default function SearchScreen() {
                   mutualHighlight={card.mutualHighlight}
                   mutualBody={card.mutualBody}
                   price={card.price}
-                  state={joinedIds.has(card.id) ? 'Joined' : 'Enabled'}
+                  state={cardStates[card.id] ?? 'Enabled'}
                   ctaLabel={card.ctaLabel}
                   ctaColor={card.ctaColor}
                   ctaTextColor={card.ctaTextColor}
                   adminApproval={card.adminApproval}
-                  onCtaPress={() => handleCtaPress(card.id)}
+                  onCtaPress={() => handleCtaPress(card.id, card.adminApproval)}
                   onPress={() => navigation.navigate('Club', { clubId: card.id })}
                 />
               ))
@@ -145,12 +149,12 @@ export default function SearchScreen() {
                   mutualHighlight={card.mutualHighlight}
                   mutualBody={card.mutualBody}
                   price={card.price}
-                  state={joinedIds.has(card.id) ? 'Joined' : 'Enabled'}
+                  state={cardStates[card.id] ?? 'Enabled'}
                   ctaLabel={card.ctaLabel}
                   ctaColor={card.ctaColor}
                   ctaTextColor={card.ctaTextColor}
                   adminApproval={card.adminApproval}
-                  onCtaPress={() => handleCtaPress(card.id)}
+                  onCtaPress={() => handleCtaPress(card.id, card.adminApproval)}
                   onPress={() => navigation.navigate('Event', { eventId: card.id })}
                 />
               ))}

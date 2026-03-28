@@ -71,16 +71,19 @@ export default function ClubScreen() {
   const clubEvents = useMemo(() => getClubEvents(clubId), [clubId]);
 
   // State
-  const [isJoined, setIsJoined] = useState(
-    CURRENT_USER.clubIds.includes(clubId),
+  type JoinState = 'Enabled' | 'Pending' | 'Joined';
+  const [joinState, setJoinState] = useState<JoinState>(
+    CURRENT_USER.clubIds.includes(clubId) ? 'Joined' : 'Enabled',
   );
+  const isJoined = joinState === 'Joined';
+  const isPending = joinState === 'Pending';
   const isAdmin = useMemo(
     () => detail?.adminIds.includes(CURRENT_USER.id) ?? false,
     [detail],
   );
   const [selectedTab, setSelectedTab] = useState(isJoined ? 1 : 0);
   const [memberSearch, setMemberSearch] = useState('');
-  const [eventJoinedIds, setEventJoinedIds] = useState<Set<string>>(new Set());
+  const [eventCardStates, setEventCardStates] = useState<Record<string, 'Pending' | 'Joined'>>({});
   const [pendingFriendIds, setPendingFriendIds] = useState<Set<string>>(new Set());
 
   // Filtered members
@@ -97,12 +100,12 @@ export default function ClubScreen() {
   }, [memberOthers, memberSearch]);
 
   const handleJoinToggle = useCallback(() => {
-    setIsJoined((prev) => {
-      const next = !prev;
-      setSelectedTab(next ? 1 : 0);
-      return next;
+    setJoinState((prev) => {
+      if (prev === 'Joined') return 'Enabled';
+      if (prev === 'Pending') return 'Pending';
+      return club?.adminApproval ? 'Pending' : 'Joined';
     });
-  }, []);
+  }, [club?.adminApproval]);
 
   const handleSendFriendRequest = useCallback((userId: string) => {
     setPendingFriendIds((prev) => {
@@ -112,12 +115,16 @@ export default function ClubScreen() {
     });
   }, []);
 
-  const handleEventCtaPress = useCallback((id: string) => {
-    setEventJoinedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
+  const handleEventCtaPress = useCallback((id: string, adminApproval?: boolean) => {
+    setEventCardStates((prev) => {
+      const current = prev[id];
+      if (current === 'Joined') {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      }
+      if (current === 'Pending') return prev;
+      return { ...prev, [id]: adminApproval ? 'Pending' : 'Joined' };
     });
   }, []);
 
@@ -316,13 +323,12 @@ export default function ClubScreen() {
                         mutualHighlight={event.mutualHighlight}
                         mutualBody={event.mutualBody}
                         price={event.price}
-                        state={
-                          eventJoinedIds.has(event.id) ? 'Joined' : 'Enabled'
-                        }
+                        state={eventCardStates[event.id] ?? 'Enabled'}
                         ctaLabel={event.ctaLabel}
                         ctaColor={event.ctaColor}
                         ctaTextColor={event.ctaTextColor}
-                        onCtaPress={() => handleEventCtaPress(event.id)}
+                        adminApproval={event.adminApproval}
+                        onCtaPress={() => handleEventCtaPress(event.id, event.adminApproval)}
                         onPress={() => navigation.push('Event', { eventId: event.id })}
                       />
                     ))
@@ -419,6 +425,18 @@ export default function ClubScreen() {
                     <Icon type="check" size={size} color={colors.text.subtle} />
                   )}
                   onPress={handleJoinToggle}
+                />
+              </View>
+            ) : isPending ? (
+              <View style={styles.bottomActionButton}>
+                <Button
+                  emphasis="Subtle"
+                  content="Text"
+                  size="Md"
+                  label="Pending"
+                  trailingIcon={({ size }) => (
+                    <Icon type="clock" size={size} color={colors.text.subtle} />
+                  )}
                 />
               </View>
             ) : club.adminApproval ? (

@@ -40,7 +40,7 @@ export default function OtherUserProfileScreen() {
   const initialStatus = INITIAL_FRIENDSHIP_STATUS[userId] ?? 'none';
   const [friendshipStatus, setFriendshipStatus] =
     useState<FriendshipStatus>(initialStatus);
-  const [joinedIds, setJoinedIds] = useState<Set<string>>(new Set());
+  const [cardStates, setCardStates] = useState<Record<string, 'Pending' | 'Joined'>>({});
   const [showAllClubs, setShowAllClubs] = useState(false);
 
   const handleSendRequest = useCallback(() => {
@@ -51,12 +51,16 @@ export default function OtherUserProfileScreen() {
     setFriendshipStatus('none');
   }, []);
 
-  const handleCtaPress = useCallback((id: string) => {
-    setJoinedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
+  const handleCtaPress = useCallback((id: string, adminApproval?: boolean) => {
+    setCardStates((prev) => {
+      const current = prev[id];
+      if (current === 'Joined') {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      }
+      if (current === 'Pending') return prev;
+      return { ...prev, [id]: adminApproval ? 'Pending' : 'Joined' };
     });
   }, []);
 
@@ -148,12 +152,12 @@ export default function OtherUserProfileScreen() {
                 mutualHighlight={club.mutualHighlight}
                 mutualBody={club.mutualBody}
                 price={club.price}
-                state={joinedIds.has(club.id) ? 'Joined' : 'Enabled'}
+                state={cardStates[club.id] ?? 'Enabled'}
                 ctaLabel={club.ctaLabel}
                 ctaColor={club.ctaColor}
                 ctaTextColor={club.ctaTextColor}
                 adminApproval={club.adminApproval}
-                onCtaPress={() => handleCtaPress(club.id)}
+                onCtaPress={() => handleCtaPress(club.id, club.adminApproval)}
                 onPress={() => navigation.navigate('Club', { clubId: club.id })}
               />
             ))}

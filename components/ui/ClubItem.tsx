@@ -2,17 +2,18 @@
  * ClubItem component — club selection row for modals
  *
  * Anatomy (from Figma node 3282:16093):
- *   Row: items center, gap spacer/12
- *   Thumbnail: 48x48, borderRadius 8, Image placeholder
- *   Text column: name (body01Medium, text/bold) + subtitle (body03Light, text/subtle)
+ *   Row: items center, gap spacer/16
+ *   Avatar: Lg size (Avatar component for proper rounded shape)
+ *   Text column: name (body01Light, text/bold) + subtitle (body03Light, text/subtle), gap spacer/4
  *   Trailing: optional checkmark icon (16px, icon/subtle)
  */
 
 import React from 'react';
-import { View, Text, Image, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Pressable, StyleSheet } from 'react-native';
+import Avatar from './Avatar';
 import Icon from './Icon';
 import { colors } from '../../lib/tokens/colors';
-import { spacer, borderRadius } from '../../lib/tokens/spacing';
+import { spacer } from '../../lib/tokens/spacing';
 import { textStyles } from '../../lib/tokens/textStyles';
 
 // ─── Types ──────────────────────────────────────────────
@@ -36,10 +37,7 @@ export default function ClubItem({
 }: ClubItemProps) {
   return (
     <Pressable style={styles.container} onPress={onPress}>
-      <Image
-        source={{ uri: imageUri || 'https://picsum.photos/96/96' }}
-        style={styles.thumbnail}
-      />
+      <Avatar type="Image" size="Lg" />
       <View style={styles.textCol}>
         <Text style={styles.name} numberOfLines={1}>
           {name}
@@ -52,7 +50,7 @@ export default function ClubItem({
       </View>
       {selected && (
         <View style={styles.iconWrap}>
-          <Icon type="check" size={16} color={colors.icon.subtle} />
+          <Icon type="check" size={16} color={colors.icon.bold} />
         </View>
       )}
     </Pressable>
@@ -65,23 +63,16 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacer['12'],
-  },
-
-  thumbnail: {
-    width: 48,
-    height: 48,
-    borderRadius: borderRadius['8'],
-    backgroundColor: colors.surface.subtle,
+    gap: spacer['16'],
   },
 
   textCol: {
     flex: 1,
-    gap: 2,
+    gap: spacer['4'],
   },
 
   name: {
-    ...textStyles.body01Medium,
+    ...textStyles.body01Light,
     color: colors.text.bold,
   },
 

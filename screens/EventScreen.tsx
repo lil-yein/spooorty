@@ -66,9 +66,12 @@ export default function EventScreen() {
   );
 
   // State
-  const [isJoined, setIsJoined] = useState(
-    detail?.memberIds.includes(CURRENT_USER.id) ?? false,
+  type JoinState = 'Enabled' | 'Pending' | 'Joined';
+  const [joinState, setJoinState] = useState<JoinState>(
+    detail?.memberIds.includes(CURRENT_USER.id) ? 'Joined' : 'Enabled',
   );
+  const isJoined = joinState === 'Joined';
+  const isPending = joinState === 'Pending';
   const isHost = useMemo(
     () => detail?.hostIds.includes(CURRENT_USER.id) ?? false,
     [detail],
@@ -90,8 +93,12 @@ export default function EventScreen() {
   }, [memberOthers, memberSearch]);
 
   const handleJoinToggle = useCallback(() => {
-    setIsJoined((prev) => !prev);
-  }, []);
+    setJoinState((prev) => {
+      if (prev === 'Joined') return 'Enabled';
+      if (prev === 'Pending') return 'Pending';
+      return event?.adminApproval ? 'Pending' : 'Joined';
+    });
+  }, [event?.adminApproval]);
 
   const handleSendFriendRequest = useCallback((userId: string) => {
     setPendingFriendIds((prev) => {
@@ -343,6 +350,18 @@ export default function EventScreen() {
                     <Icon type="check" size={size} color={colors.text.subtle} />
                   )}
                   onPress={handleJoinToggle}
+                />
+              </View>
+            ) : isPending ? (
+              <View style={styles.bottomActionButton}>
+                <Button
+                  emphasis="Subtle"
+                  content="Text"
+                  size="Md"
+                  label="Pending"
+                  trailingIcon={({ size }) => (
+                    <Icon type="clock" size={size} color={colors.text.subtle} />
+                  )}
                 />
               </View>
             ) : event.adminApproval ? (

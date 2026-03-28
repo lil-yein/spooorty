@@ -36,18 +36,20 @@ import {
   ButtonSelect,
   ButtonMultiSelect,
   ColorPicker,
+  CoverPhotoModal,
   Divider,
   Icon,
   Input,
   Levels,
   ClubItem,
-  LocationItem,
+  LocationSearchModal,
   MembersItem,
   Search,
   SearchContentItem,
   Switch,
   Tag,
 } from '../components/ui';
+import type { SelectedLocation } from '../components/ui/LocationSearchModal';
 import {
   CURRENT_USER,
   EVENTS,
@@ -76,48 +78,6 @@ const DAY_LABELS_FULL = [
   'Sunday',
 ];
 
-// ─── Mock location data ────────────────────────────────
-
-type LocationData = {
-  id: string;
-  name: string;
-  address: string;
-  city: string;
-};
-
-const LOCATIONS: LocationData[] = [
-  {
-    id: 'loc-1',
-    name: 'Gantry Park Handball Court',
-    address: '4-09 47th Rd, Long Island City, NY 11101',
-    city: 'New York',
-  },
-  {
-    id: 'loc-2',
-    name: 'Central Park Tennis Center',
-    address: 'Central Park West, New York, NY 10024',
-    city: 'New York',
-  },
-  {
-    id: 'loc-3',
-    name: 'Prospect Park Pickleball',
-    address: 'Prospect Park SW, Brooklyn, NY 11215',
-    city: 'New York',
-  },
-  {
-    id: 'loc-4',
-    name: 'Liberty State Park Courts',
-    address: '200 Morris Pesin Dr, Jersey City, NJ 07305',
-    city: 'New Jersey',
-  },
-  {
-    id: 'loc-5',
-    name: 'Hoboken Waterfront Fields',
-    address: '1301 Sinatra Dr N, Hoboken, NJ 07030',
-    city: 'New Jersey',
-  },
-];
-
 // ─── Component ──────────────────────────────────────────
 
 export default function CreateEventScreen() {
@@ -126,6 +86,8 @@ export default function CreateEventScreen() {
   const initialClubId = route.params?.associatedClubId ?? null;
 
   // ── Form state ──
+  const [coverImageUri, setCoverImageUri] = useState<string | null>(null);
+  const [coverModalVisible, setCoverModalVisible] = useState(false);
   const [eventName, setEventName] = useState('');
 
   // Date mode: isRecurring false = One Time, true = Recurring
@@ -182,12 +144,9 @@ export default function CreateEventScreen() {
   const [ctaColor, setCtaColor] = useState('#000000');
   const [colorHue, setColorHue] = useState(0);
 
-  // Location
-  const [locationSearch, setLocationSearch] = useState('');
+  // Location (Google Places)
   const [locationExpanded, setLocationExpanded] = useState(false);
-  const [selectedLocationId, setSelectedLocationId] = useState<string | null>(
-    null,
-  );
+  const [selectedLocation, setSelectedLocation] = useState<SelectedLocation | null>(null);
 
   // Public/Private, Admin Approval, Capacity
   const [isPublic, setIsPublic] = useState(false);
@@ -242,24 +201,6 @@ export default function CreateEventScreen() {
     })
     .filter(Boolean)
     .join(', ');
-
-  const selectedLocation = LOCATIONS.find((l) => l.id === selectedLocationId);
-
-  const filteredLocations = locationSearch.trim()
-    ? LOCATIONS.filter(
-        (l) =>
-          l.name.toLowerCase().includes(locationSearch.toLowerCase()) ||
-          l.address.toLowerCase().includes(locationSearch.toLowerCase()),
-      )
-    : LOCATIONS;
-
-  const locationsByCity = filteredLocations.reduce<
-    Record<string, LocationData[]>
-  >((acc, loc) => {
-    if (!acc[loc.city]) acc[loc.city] = [];
-    acc[loc.city].push(loc);
-    return acc;
-  }, {});
 
   const toggleAdmin = (userId: string) => {
     setSelectedAdminIds((prev) => {
@@ -351,7 +292,7 @@ export default function CreateEventScreen() {
       dateTimeStr = `${dateValue} ${timeStr}`;
     }
 
-    const locationName = selectedLocation?.name ?? (locationSearch.trim() || 'TBD');
+    const locationName = selectedLocation?.name ?? 'TBD';
 
     // Create new club and navigate
     const newClub = {
@@ -386,7 +327,6 @@ export default function CreateEventScreen() {
     isRecurring,
     selectedDays,
     dayTimes,
-    locationSearch,
     selectedLocation,
     levelIndicator,
     ctaColor,
@@ -590,65 +530,19 @@ export default function CreateEventScreen() {
           />
         </View>
       </Pressable>
+      {selectedLocation?.address ? (
+        <Text style={styles.locationAddress}>{selectedLocation.address}</Text>
+      ) : null}
     </View>
   );
 
   const renderLocationModal = () => (
-    <Modal
+    <LocationSearchModal
       visible={locationExpanded}
-      transparent
-      animationType="fade"
-      onRequestClose={() => setLocationExpanded(false)}
-    >
-      <View style={styles.modalOverlay}>
-        <Pressable style={StyleSheet.absoluteFill} onPress={() => setLocationExpanded(false)} />
-        <View style={styles.modalCard}>
-          <View style={styles.modalCardInner}>
-          {/* Back button — top left */}
-          <View style={styles.modalBackRow}>
-            <Button
-              emphasis="Subtle"
-              content="Icon"
-              size="Sm"
-              icon={({ color, size }) => (
-                <Icon type="arrow backward" size={size} color={color} />
-              )}
-              onPress={() => setLocationExpanded(false)}
-            />
-          </View>
-
-          <View style={styles.modalSearchWrap}>
-            <Search
-              value={locationSearch}
-              onChangeText={setLocationSearch}
-              placeholder="Search Location"
-            />
-          </View>
-
-          <ScrollView style={styles.modalScroll} showsVerticalScrollIndicator={false}>
-            {Object.entries(locationsByCity).map(([city, locs]) => (
-              <View key={city} style={styles.memberGroup}>
-                <Text style={styles.memberGroupTitle}>{city}</Text>
-                {locs.map((loc) => (
-                  <LocationItem
-                    key={loc.id}
-                    avatar={<Avatar type="Image" size="Lg" />}
-                    name={loc.name}
-                    description={loc.address}
-                    selected={selectedLocationId === loc.id}
-                    onPress={() => {
-                      setSelectedLocationId(loc.id);
-                      setLocationSearch('');
-                    }}
-                  />
-                ))}
-              </View>
-            ))}
-          </ScrollView>
-          </View>
-        </View>
-      </View>
-    </Modal>
+      onClose={() => setLocationExpanded(false)}
+      onLocationSelected={(loc) => setSelectedLocation(loc)}
+      placeholder="Search Location"
+    />
   );
 
   const renderClubModal = () => (
@@ -710,9 +604,17 @@ export default function CreateEventScreen() {
     <View style={styles.container}>
       {/* ── Hero Cover ────────────────────────────────────── */}
       <Image
-        source={{ uri: 'https://picsum.photos/800/1200' }}
+        source={{ uri: coverImageUri || 'https://picsum.photos/800/1200' }}
         style={styles.heroCover}
         resizeMode="cover"
+      />
+
+      {/* ── Cover Photo Modal ───────────────────────────── */}
+      <CoverPhotoModal
+        visible={coverModalVisible}
+        onClose={() => setCoverModalVisible(false)}
+        onImageSelected={setCoverImageUri}
+        context="event"
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -741,6 +643,7 @@ export default function CreateEventScreen() {
               icon={({ color, size }) => (
                 <Icon type="add image" size={size} color={color} />
               )}
+              onPress={() => setCoverModalVisible(true)}
             />
           </View>
 
@@ -1203,6 +1106,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 
+  locationAddress: {
+    ...textStyles.body03Light,
+    color: colors.text.subtle,
+    marginTop: spacer['4'],
+  },
+
   switchRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1423,10 +1332,10 @@ const styles = StyleSheet.create({
   clubModalSectionTitle: {
     ...textStyles.title02Medium,
     color: colors.text.bold,
-    marginBottom: spacer['16'],
+    marginBottom: spacer['12'],
   },
 
   clubModalList: {
-    gap: spacer['16'],
+    gap: spacer['12'],
   },
 });

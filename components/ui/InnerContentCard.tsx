@@ -30,12 +30,13 @@ export type InnerContentCardProps = {
   mutualHighlight?: string;
   mutualBody?: string;
   price?: string;
-  state?: 'Enabled' | 'Joined';
+  state?: 'Enabled' | 'Pending' | 'Joined';
   ctaLabel?: string;
   ctaColor?: string;
   ctaTextColor?: string;
   onCtaPress?: () => void;
   onPress?: () => void;
+  adminApproval?: boolean;
 };
 
 // ─── Component ──────────────────────────────────────────
@@ -55,8 +56,10 @@ export default function InnerContentCard({
   ctaTextColor = colors.text.onhighlight,
   onCtaPress,
   onPress,
+  adminApproval = false,
 }: InnerContentCardProps) {
   const isJoined = state === 'Joined';
+  const isPending = state === 'Pending';
 
   return (
     <Pressable style={styles.container} onPress={onPress}>
@@ -113,16 +116,23 @@ export default function InnerContentCard({
                 <Icon type="check" size={16} color={colors.text.subtle} />
               </View>
             </Pressable>
+          ) : isPending ? (
+            <Pressable style={styles.joinedButton} onPress={onCtaPress}>
+              <Text style={styles.joinedLabel}>Pending</Text>
+              <View style={styles.ctaIconWrap}>
+                <Icon type="clock" size={16} color={colors.text.subtle} />
+              </View>
+            </Pressable>
           ) : (
             <Pressable
               style={[styles.ctaButton, { backgroundColor: ctaColor }]}
               onPress={onCtaPress}
             >
               <Text style={[styles.ctaLabel, { color: ctaTextColor }]}>
-                {ctaLabel}
+                {adminApproval ? 'Request to Join' : ctaLabel}
               </Text>
               <View style={styles.ctaIconWrap}>
-                <Icon type="arrow forward" size={16} color={ctaTextColor} />
+                <Icon type={adminApproval ? "lock" : "arrow forward"} size={16} color={ctaTextColor} />
               </View>
             </Pressable>
           )}

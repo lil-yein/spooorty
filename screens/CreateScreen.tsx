@@ -7,7 +7,7 @@
  */
 
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { colors } from '../lib/tokens/colors';
@@ -27,7 +27,7 @@ export default function CreateScreen() {
       <View style={styles.content}>
         <View style={styles.sections}>
           {/* Club section */}
-          <View style={styles.sectionWrapper}>
+          <Pressable style={styles.sectionWrapper} onPress={() => navigation.navigate('CreateClub')}>
             <View style={styles.sectionInner}>
               <View style={styles.sectionContent}>
                 <View style={styles.sectionTextGroup}>
@@ -43,16 +43,14 @@ export default function CreateScreen() {
                   trailingIcon={({ color, size }) => (
                     <Icon type="arrow forward" size={size} color={color} />
                   )}
-                  onPress={() => {
-                    navigation.navigate('CreateClub');
-                  }}
+                  onPress={() => navigation.navigate('CreateClub')}
                 />
               </View>
             </View>
-          </View>
+          </Pressable>
 
           {/* Event section */}
-          <View style={styles.sectionWrapper}>
+          <Pressable style={styles.sectionWrapper} onPress={() => navigation.navigate('CreateEvent')}>
             <View style={styles.sectionInner}>
               <View style={styles.sectionContent}>
                 <View style={styles.sectionTextGroup}>
@@ -69,13 +67,11 @@ export default function CreateScreen() {
                   trailingIcon={({ color, size }) => (
                     <Icon type="arrow forward" size={size} color={color} />
                   )}
-                  onPress={() => {
-                    navigation.navigate('CreateEvent');
-                  }}
+                  onPress={() => navigation.navigate('CreateEvent')}
                 />
               </View>
             </View>
-          </View>
+          </Pressable>
         </View>
       </View>
     </View>

@@ -42,7 +42,7 @@ export default function MyProfileScreen() {
   const navigation = useNavigation<any>();
   const [friendSearch, setFriendSearch] = useState('');
   const [suggestionSearch, setSuggestionSearch] = useState('');
-  const [joinedIds, setJoinedIds] = useState<Set<string>>(new Set());
+  const [cardStates, setCardStates] = useState<Record<string, 'Pending' | 'Joined'>>({});
   const [showAllClubs, setShowAllClubs] = useState(false);
   const [pendingRequestIds, setPendingRequestIds] = useState<Set<string>>(new Set());
 
@@ -82,12 +82,16 @@ export default function MyProfileScreen() {
     return groups;
   }, [filteredSuggestions]);
 
-  const handleCtaPress = useCallback((id: string) => {
-    setJoinedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
+  const handleCtaPress = useCallback((id: string, adminApproval?: boolean) => {
+    setCardStates((prev) => {
+      const current = prev[id];
+      if (current === 'Joined') {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      }
+      if (current === 'Pending') return prev;
+      return { ...prev, [id]: adminApproval ? 'Pending' : 'Joined' };
     });
   }, []);
 
@@ -192,12 +196,12 @@ export default function MyProfileScreen() {
                 mutualHighlight={club.mutualHighlight}
                 mutualBody={club.mutualBody}
                 price={club.price}
-                state={joinedIds.has(club.id) ? 'Joined' : 'Enabled'}
+                state={cardStates[club.id] ?? 'Enabled'}
                 ctaLabel={club.ctaLabel}
                 ctaColor={club.ctaColor}
                 ctaTextColor={club.ctaTextColor}
                 adminApproval={club.adminApproval}
-                onCtaPress={() => handleCtaPress(club.id)}
+                onCtaPress={() => handleCtaPress(club.id, club.adminApproval)}
                 onPress={() => navigation.navigate('Club', { clubId: club.id })}
               />
             ))}
@@ -450,7 +454,7 @@ const styles = StyleSheet.create({
   },
 
   sectionBody: {
-    gap: spacer['12'],
+    gap: spacer['24'],
   },
 
   membersList: {

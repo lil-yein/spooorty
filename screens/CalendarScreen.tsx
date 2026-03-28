@@ -50,7 +50,7 @@ export default function CalendarScreen() {
   const [year, setYear] = useState(2024);
   const [month, setMonth] = useState(0); // 0 = January
   const [selectedDay, setSelectedDay] = useState<number>(todayDay);
-  const [joinedIds, setJoinedIds] = useState<Set<string>>(new Set());
+  const [cardStates, setCardStates] = useState<Record<string, 'Pending' | 'Joined'>>({});
 
   // Event days for indicator dots
   const eventDays = useMemo(
@@ -101,12 +101,16 @@ export default function CalendarScreen() {
     setSelectedDay(day);
   }, []);
 
-  const handleCtaPress = useCallback((id: string) => {
-    setJoinedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
+  const handleCtaPress = useCallback((id: string, adminApproval?: boolean) => {
+    setCardStates((prev) => {
+      const current = prev[id];
+      if (current === 'Joined') {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      }
+      if (current === 'Pending') return prev;
+      return { ...prev, [id]: adminApproval ? 'Pending' : 'Joined' };
     });
   }, []);
 
@@ -172,12 +176,12 @@ export default function CalendarScreen() {
                   mutualHighlight={event.mutualHighlight}
                   mutualBody={event.mutualBody}
                   price={event.price}
-                  state={joinedIds.has(event.id) ? 'Joined' : 'Enabled'}
+                  state={cardStates[event.id] ?? 'Enabled'}
                   ctaLabel={event.ctaLabel}
                   ctaColor={event.ctaColor}
                   ctaTextColor={event.ctaTextColor}
                   adminApproval={event.adminApproval}
-                  onCtaPress={() => handleCtaPress(event.id)}
+                  onCtaPress={() => handleCtaPress(event.id, event.adminApproval)}
                   onPress={() => navigation.push('Event', { eventId: event.id })}
                 />
             ))}

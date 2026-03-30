@@ -13,7 +13,7 @@
  *   Bottom action: "Create Club" button + error state
  */
 
-import React, { useState, useCallback, useRef, useMemo } from 'react';
+import React, { useState, useCallback, useRef, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -28,7 +28,8 @@ import {
   Platform,
   type ViewStyle,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
+import type { CreateStackParamList } from '../navigation/CreateStack';
 import { colors } from '../lib/tokens/colors';
 import { spacer, borderRadius } from '../lib/tokens/spacing';
 import { textStyles } from '../lib/tokens/textStyles';
@@ -48,16 +49,18 @@ import {
   Tag,
 } from '../components/ui';
 import type { SelectedLocation } from '../components/ui/LocationSearchModal';
+import { SPORTS } from '../lib/data/mockData';
+import { useAuth } from '../lib/AuthContext';
+import { createClub, updateClub, getClubById } from '../lib/api/clubs';
+import { searchUsers } from '../lib/api/users';
+import { uploadCoverFromUri } from '../lib/api/storage';
+import { skillLevelToNumber } from '../lib/api/transforms';
+import type { SkillLevel, VibeTag } from '../lib/database/types';
 import {
-  CURRENT_USER,
-  CLUBS,
-  USERS,
-  SPORTS,
-  getFriends,
-  getFriendSuggestions,
-  FRIEND_DESCRIPTIONS,
-  SUGGESTION_DESCRIPTIONS,
-} from '../lib/data/mockData';
+  validateClubForm,
+  hasClubErrors,
+  type ClubFormErrors,
+} from '../lib/validation';
 
 const SCREEN_HEIGHT = Dimensions.get('window').height;
 
@@ -83,8 +86,23 @@ function groupByLetter(items: string[]): SportsSection[] {
 
 // ─── Component ──────────────────────────────────────────
 
+const SKILL_LEVEL_MAP: Record<number, SkillLevel> = {
+  1: 'beginner',
+  2: 'beg_int',
+  3: 'intermediate',
+  4: 'int_adv',
+  5: 'advanced',
+};
+
 export default function CreateClubScreen() {
   const navigation = useNavigation<any>();
+  const route = useRoute<RouteProp<CreateStackParamList, 'CreateClub'>>();
+  const { user } = useAuth();
+
+  const editClubId = route.params?.editClubId;
+  const isEditMode = !!editClubId;
+  const [creating, setCreating] = useState(false);
+  const [editLoaded, setEditLoaded] = useState(false);
 
   // ── Form state ──
   const [coverImageUri, setCoverImageUri] = useState<string | null>(null);
@@ -134,34 +152,62 @@ export default function CreateClubScreen() {
   const [adminApproval, setAdminApproval] = useState(false);
   const [capacity, setCapacity] = useState('');
 
-  // Validation
-  const [showError, setShowError] = useState(false);
+  // Validation — per-field errors
+  const [fieldErrors, setFieldErrors] = useState<ClubFormErrors>({
+    name: null,
+    fee: null,
+    capacity: null,
+    description: null,
+  });
+  const [submitted, setSubmitted] = useState(false);
 
   // Sports SectionList ref
   const sportsSectionListRef = useRef<SectionList>(null);
 
+  // ── Pre-populate form for edit mode ──
+  useEffect(() => {
+    if (!isEditMode || editLoaded) return;
+    (async () => {
+      try {
+        const club = await getClubById(editClubId!);
+        if (!club) return;
+        setCoverImageUri(club.cover_photo_url ?? null);
+        setClubName(club.name);
+        if (club.sport) setSelectedSports([club.sport]);
+        if (club.location_name) {
+          setSelectedLocation({
+            placeId: '',
+            name: club.location_name,
+            address: club.location_name,
+            latitude: club.location_lat ?? 0,
+            longitude: club.location_lng ?? 0,
+          });
+        }
+        setFeeValue(club.fee_amount ? String(club.fee_amount) : '0');
+        setIsYearlyFee(false); // DB stores monthly/per_session/free
+        setLevelIndicator(skillLevelToNumber(club.skill_level));
+        setDescription(club.description ?? '');
+        if (club.vibe) {
+          // capitalize first letter to match VIBE_OPTIONS
+          setSelectedVibe(club.vibe.charAt(0).toUpperCase() + club.vibe.slice(1));
+        }
+        setIsPublic(club.is_public ?? true);
+        setAdminApproval(club.requires_approval ?? true);
+        setCapacity(club.capacity ? String(club.capacity) : '');
+        setEditLoaded(true);
+      } catch (err) {
+        console.error('Failed to load club for editing:', err);
+      }
+    })();
+  }, [isEditMode, editClubId, editLoaded]);
+
   // ── Helpers ──
 
-  const allUsers = [CURRENT_USER, ...USERS];
-
-  const friends = getFriends();
-  const otherMembers = getFriendSuggestions();
-
-  const filteredFriends = memberSearch.trim()
-    ? friends.filter((u) =>
-        u.name.toLowerCase().includes(memberSearch.toLowerCase()),
-      )
-    : friends;
-
-  const filteredOtherMembers = memberSearch.trim()
-    ? otherMembers.filter((u) =>
-        u.name.toLowerCase().includes(memberSearch.toLowerCase()),
-      )
-    : otherMembers;
-
-  const invitedMemberUsers = Array.from(invitedMemberIds)
-    .map((id) => allUsers.find((u) => u.id === id))
-    .filter(Boolean) as typeof allUsers;
+  const friends: any[] = [];
+  const otherMembers: any[] = [];
+  const filteredFriends = friends;
+  const filteredOtherMembers = otherMembers;
+  const invitedMemberUsers: any[] = [];
 
   // Sports filtering
   const filteredSports = useMemo(
@@ -220,12 +266,20 @@ export default function CreateClubScreen() {
     });
   };
 
+  // All available users for admin selection: current user + friends + others
+  const allUsers: { id: string; name: string; handle?: string }[] = useMemo(() => {
+    const list: { id: string; name: string; handle?: string }[] = [];
+    if (user) list.push({ id: user.id, name: user.user_metadata?.display_name ?? 'You' });
+    list.push(...friends, ...otherMembers);
+    return list;
+  }, [user, friends, otherMembers]);
+
   const selectedAdminUsers = Array.from(selectedAdminIds)
-    .map((id) => allUsers.find((u) => u.id === id))
+    .map((id) => allUsers.find((u: { id: string }) => u.id === id))
     .filter(Boolean) as typeof allUsers;
 
   const selectedAdminNames = selectedAdminUsers
-    .map((u) => u.name)
+    .map((u: { name: string }) => u.name)
     .join(', ');
 
   const filteredAdminFriends = adminSearch.trim()
@@ -290,44 +344,88 @@ export default function CreateClubScreen() {
     setCtaColor(`#${f(0)}${f(8)}${f(4)}`);
   }, []);
 
-  const handleCreate = useCallback(() => {
-    if (!clubName.trim() || !feeValue.trim()) {
-      setShowError(true);
-      return;
-    }
-    setShowError(false);
+  const handleSubmit = useCallback(async () => {
+    setSubmitted(true);
+    const errors = validateClubForm({
+      name: clubName,
+      feeValue,
+      capacity,
+      description,
+    });
+    setFieldErrors(errors);
+    if (hasClubErrors(errors)) return;
+    if (!user) return;
+    setCreating(true);
 
-    const locationName = selectedLocation?.name ?? 'TBD';
-
-    const memberCount = invitedMemberIds.size + 1; // +1 for creator
-
-    const newClub = {
-      id: `club-new-${Date.now()}`,
-      name: clubName.toUpperCase(),
-      members: `${memberCount} Member${memberCount > 1 ? 's' : ''}`,
-      location: locationName,
-      level: levelIndicator as 1 | 2 | 3 | 4 | 5,
-      mutualHighlight: `${CURRENT_USER.name.split(' ')[0]}`,
-      mutualBody: 'is the admin',
-      price: `$${feeValue}`,
-      ctaLabel: 'Join Club',
-      ctaColor: ctaColor,
-      ctaTextColor: colors.text.onhighlight,
+    const formData = {
+      name: clubName.trim(),
+      sport: selectedSports[0] ?? null,
+      description: description.trim() || null,
+      location_name: selectedLocation?.name ?? null,
+      location_lat: selectedLocation?.latitude ?? null,
+      location_lng: selectedLocation?.longitude ?? null,
+      skill_level: SKILL_LEVEL_MAP[levelIndicator] ?? ('beginner' as const),
+      fee_amount: parseFloat(feeValue) || 0,
+      fee_frequency: (parseFloat(feeValue) > 0 ? 'monthly' : 'free') as 'monthly' | 'free',
+      vibe: (selectedVibe.toLowerCase() as VibeTag) ?? null,
+      capacity: capacity ? parseInt(capacity, 10) : null,
+      is_public: isPublic,
+      requires_approval: adminApproval,
     };
 
-    CLUBS.push(newClub);
+    try {
+      let clubId: string;
 
-    navigation.navigate('Discover', {
-      screen: 'Club',
-      params: { clubId: newClub.id },
-    });
+      if (isEditMode && editClubId) {
+        // ── Update existing club ──
+        await updateClub(editClubId, formData);
+        clubId = editClubId;
+      } else {
+        // ── Create new club ──
+        const newClub = await createClub({
+          ...formData,
+          created_by: user.id,
+        });
+        clubId = newClub.id;
+      }
+
+      // Upload cover photo if changed
+      if (coverImageUri) {
+        try {
+          const coverUrl = await uploadCoverFromUri('club', clubId, coverImageUri);
+          if (coverUrl) {
+            await updateClub(clubId, { cover_photo_url: coverUrl });
+          }
+        } catch (uploadErr) {
+          console.warn('Cover photo upload failed:', uploadErr);
+        }
+      }
+
+      navigation.navigate('Discover', {
+        screen: 'Club',
+        params: { clubId },
+      });
+    } catch (err) {
+      console.error(`Failed to ${isEditMode ? 'update' : 'create'} club:`, err);
+      setFieldErrors((prev) => ({ ...prev, name: 'Something went wrong. Please try again.' }));
+    } finally {
+      setCreating(false);
+    }
   }, [
     clubName,
     feeValue,
+    selectedSports,
+    description,
     selectedLocation,
-    invitedMemberIds,
     levelIndicator,
-    ctaColor,
+    selectedVibe,
+    capacity,
+    isPublic,
+    adminApproval,
+    isEditMode,
+    editClubId,
+    coverImageUri,
+    user,
     navigation,
   ]);
 
@@ -514,7 +612,7 @@ export default function CreateClubScreen() {
                               style={styles.inviteDescription}
                               numberOfLines={1}
                             >
-                              {FRIEND_DESCRIPTIONS[user.id] ?? user.handle}
+                              {user.handle ?? ''}
                             </Text>
                           </View>
                         </View>
@@ -558,7 +656,7 @@ export default function CreateClubScreen() {
                               style={styles.inviteDescription}
                               numberOfLines={1}
                             >
-                              {SUGGESTION_DESCRIPTIONS[user.id] ?? user.handle}
+                              {user.handle ?? ''}
                             </Text>
                           </View>
                         </View>
@@ -651,9 +749,13 @@ export default function CreateClubScreen() {
                   value={clubName}
                   onChangeText={(text) => {
                     setClubName(text);
-                    setShowError(false);
+                    if (submitted) setFieldErrors((prev) => ({ ...prev, name: null }));
                   }}
+                  maxLength={80}
                 />
+                {submitted && fieldErrors.name && (
+                  <Text style={styles.fieldError}>{fieldErrors.name}</Text>
+                )}
               </View>
 
               <Divider />
@@ -730,10 +832,13 @@ export default function CreateClubScreen() {
                   value={feeValue}
                   onChangeText={(text) => {
                     setFeeValue(text);
-                    setShowError(false);
+                    if (submitted) setFieldErrors((prev) => ({ ...prev, fee: null }));
                   }}
                   keyboardType="number-pad"
                 />
+                {submitted && fieldErrors.fee && (
+                  <Text style={styles.fieldError}>{fieldErrors.fee}</Text>
+                )}
               </View>
             </View>
           </View>
@@ -894,9 +999,15 @@ export default function CreateClubScreen() {
                       placeholder="00"
                       placeholderTextColor={colors.text.subtle}
                       value={capacity}
-                      onChangeText={setCapacity}
+                      onChangeText={(text) => {
+                        setCapacity(text);
+                        if (submitted) setFieldErrors((prev) => ({ ...prev, capacity: null }));
+                      }}
                       keyboardType="number-pad"
                     />
+                    {submitted && fieldErrors.capacity && (
+                      <Text style={styles.fieldError}>{fieldErrors.capacity}</Text>
+                    )}
                     <Text style={styles.helperText}>
                       Set max number of members for your club
                     </Text>
@@ -910,11 +1021,11 @@ export default function CreateClubScreen() {
 
       {/* ── Bottom Action ──────────────────────────────────── */}
       <View style={styles.bottomActionWrap}>
-        {showError && (
+        {submitted && hasClubErrors(fieldErrors) && (
           <View style={styles.errorRow}>
             <Icon type="info" size={12} color={colors.icon.error} />
             <Text style={styles.errorText}>
-              Please fill out Name and Fee
+              {Object.values(fieldErrors).find((e) => e !== null)}
             </Text>
           </View>
         )}
@@ -922,11 +1033,11 @@ export default function CreateClubScreen() {
           <View style={styles.bottomActionRow}>
             <Button
               emphasis="Bold"
-              label="Create Club"
+              label={isEditMode ? 'Save Changes' : 'Create Club'}
               leadingIcon={({ color, size }) => (
-                <Icon type="add" size={size} color={color} />
+                <Icon type={isEditMode ? 'check' : 'add'} size={size} color={color} />
               )}
-              onPress={handleCreate}
+              onPress={handleSubmit}
             />
           </View>
         </View>
@@ -996,19 +1107,21 @@ export default function CreateClubScreen() {
                 showsVerticalScrollIndicator={false}
               >
                 {/* You */}
+                {user && (
                 <View style={styles.memberGroup}>
                   <Text style={styles.memberGroupTitle}>You</Text>
                   <MembersItem
                     avatar={<Avatar type="Image" size="Lg" />}
-                    name={CURRENT_USER.name}
+                    name={user.user_metadata?.display_name ?? 'You'}
                     description="That's you!"
-                    showIcon={selectedAdminIds.has(CURRENT_USER.id)}
+                    showIcon={selectedAdminIds.has(user.id)}
                     icon={({ size }) => (
                       <Icon type="check" color={colors.icon.bold} size={size} />
                     )}
-                    onPress={() => toggleAdmin(CURRENT_USER.id)}
+                    onPress={() => toggleAdmin(user.id)}
                   />
                 </View>
+                )}
 
                 {/* Friends */}
                 {filteredAdminFriends.length > 0 && (
@@ -1020,7 +1133,7 @@ export default function CreateClubScreen() {
                         avatar={<Avatar type="Image" size="Lg" />}
                         name={user.name}
                         description={
-                          FRIEND_DESCRIPTIONS[user.id] ?? user.handle
+                          user.handle ?? ''
                         }
                         showIcon={selectedAdminIds.has(user.id)}
                         icon={({ size }) => (
@@ -1042,7 +1155,7 @@ export default function CreateClubScreen() {
                         avatar={<Avatar type="Image" size="Lg" />}
                         name={user.name}
                         description={
-                          SUGGESTION_DESCRIPTIONS[user.id] ?? user.handle
+                          user.handle ?? ''
                         }
                         showIcon
                         icon={
@@ -1482,6 +1595,12 @@ const styles = StyleSheet.create({
   errorText: {
     ...textStyles.body03Light,
     color: colors.text.error,
+  },
+
+  fieldError: {
+    ...textStyles.body03Light,
+    color: colors.text.error,
+    marginTop: spacer['4'],
   },
 
   bottomActionInner: {

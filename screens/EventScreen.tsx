@@ -9,18 +9,22 @@
  *   Section 3: Vibe + Description
  *   Section 4: Members list (no tabs — members only)
  *   Bottom action bar (Join/Joined + Share)
+ *
+ * Data: fetches event, attendees from Supabase.
  */
 
-import React, { useState, useMemo, useCallback, type ReactNode } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import {
   View,
   Text,
   ScrollView,
   Pressable,
+  ActivityIndicator,
   StyleSheet,
   Image,
   Dimensions,
   Platform,
+  Share,
   type ViewStyle,
 } from 'react-native';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
@@ -38,13 +42,9 @@ import {
   Search,
   Tag,
 } from '../components/ui';
-import {
-  EVENTS,
-  CURRENT_USER,
-  getEventDetail,
-  getEventMembers,
-  getEventHosts,
-} from '../lib/data/mockData';
+import { useAuth } from '../lib/AuthContext';
+import { useEvent, useEventAttendees, useEventRsvp } from '../lib/hooks/useEvents';
+import { skillLevelToNumber, formatFee, formatEventDateTime, getCtaColors } from '../lib/api/transforms';
 import type { DiscoverStackParamList } from '../navigation/DiscoverStack';
 
 const SCREEN_HEIGHT = Dimensions.get('window').height;
@@ -55,50 +55,58 @@ export default function EventScreen() {
   const navigation = useNavigation<any>();
   const route = useRoute<RouteProp<DiscoverStackParamList, 'Event'>>();
   const { eventId } = route.params;
+  const { user } = useAuth();
 
-  // Data
-  const event = useMemo(() => EVENTS.find((e) => e.id === eventId), [eventId]);
-  const detail = useMemo(() => getEventDetail(eventId), [eventId]);
-  const hosts = useMemo(() => getEventHosts(eventId), [eventId]);
-  const { friends: memberFriends, others: memberOthers } = useMemo(
-    () => getEventMembers(eventId),
-    [eventId],
+  // Fetch real data from Supabase
+  const { data: event, loading: eventLoading } = useEvent(eventId);
+  const { data: attendees, loading: attendeesLoading } = useEventAttendees(eventId);
+  const { data: rsvp, join, leave } = useEventRsvp(eventId);
+
+  // Derived data
+  const hosts = useMemo(
+    () => (attendees ?? []).filter((a) => a.role === 'admin').map((a) => a.user),
+    [attendees],
   );
+  const allMembers = useMemo(
+    () => (attendees ?? []).map((a) => a.user),
+    [attendees],
+  );
+  const memberCount = allMembers.length;
+
+  const isJoined = rsvp?.status === 'approved';
+  const isPending = rsvp?.status === 'pending';
+  const isHost = hosts.some((h) => h.id === user?.id);
+
+  const handleShare = useCallback(async () => {
+    if (!event) return;
+    try {
+      await Share.share({
+        message: `Check out ${event.name} on Spooorty!${event.location_name ? ` \u{1F4CD} ${event.location_name}` : ''}${event.event_date ? ` \u{1F4C5} ${event.event_date}` : ''}`,
+        // url: `https://spooorty.app/event/${event.id}`, // enable when deep links are live
+      });
+    } catch (_) {}
+  }, [event]);
 
   // State
-  type JoinState = 'Enabled' | 'Pending' | 'Joined';
-  const [joinState, setJoinState] = useState<JoinState>(
-    detail?.memberIds.includes(CURRENT_USER.id) ? 'Joined' : 'Enabled',
-  );
-  const isJoined = joinState === 'Joined';
-  const isPending = joinState === 'Pending';
-  const isHost = useMemo(
-    () => detail?.hostIds.includes(CURRENT_USER.id) ?? false,
-    [detail],
-  );
   const [memberSearch, setMemberSearch] = useState('');
   const [pendingFriendIds, setPendingFriendIds] = useState<Set<string>>(new Set());
 
+  const ctaColors = getCtaColors(1);
+
   // Filtered members
-  const filteredFriends = useMemo(() => {
-    if (!memberSearch.trim()) return memberFriends;
-    const q = memberSearch.toLowerCase();
-    return memberFriends.filter((f) => f.name.toLowerCase().includes(q));
-  }, [memberFriends, memberSearch]);
+  const filteredMembers = useMemo(() => {
+    const q = memberSearch.toLowerCase().trim();
+    if (!q) return allMembers;
+    return allMembers.filter((m) => m.display_name.toLowerCase().includes(q));
+  }, [allMembers, memberSearch]);
 
-  const filteredOthers = useMemo(() => {
-    if (!memberSearch.trim()) return memberOthers;
-    const q = memberSearch.toLowerCase();
-    return memberOthers.filter((m) => m.name.toLowerCase().includes(q));
-  }, [memberOthers, memberSearch]);
-
-  const handleJoinToggle = useCallback(() => {
-    setJoinState((prev) => {
-      if (prev === 'Joined') return 'Enabled';
-      if (prev === 'Pending') return 'Pending';
-      return event?.adminApproval ? 'Pending' : 'Joined';
-    });
-  }, [event?.adminApproval]);
+  const handleJoinToggle = useCallback(async () => {
+    if (isJoined) {
+      await leave();
+    } else if (!isPending) {
+      await join();
+    }
+  }, [isJoined, isPending, join, leave]);
 
   const handleSendFriendRequest = useCallback((userId: string) => {
     setPendingFriendIds((prev) => {
@@ -115,7 +123,15 @@ export default function EventScreen() {
     [navigation],
   );
 
-  if (!event || !detail) {
+  if (eventLoading) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color={colors.text.subtle} />
+      </View>
+    );
+  }
+
+  if (!event) {
     return (
       <View style={styles.container}>
         <Text style={styles.notFound}>Event not found</Text>
@@ -127,7 +143,7 @@ export default function EventScreen() {
     <View style={styles.container}>
       {/* ── Hero Cover (absolute, behind all content) ───── */}
       <Image
-        source={{ uri: 'https://picsum.photos/800/1200' }}
+        source={{ uri: event.cover_photo_url || 'https://picsum.photos/800/1200' }}
         style={styles.heroCover}
         resizeMode="cover"
       />
@@ -178,6 +194,12 @@ export default function EventScreen() {
                 icon={({ color, size }) => (
                   <Icon type="edit" size={size} color={color} />
                 )}
+                onPress={() =>
+                  navigation.navigate('Create', {
+                    screen: 'CreateEvent',
+                    params: { editEventId: eventId },
+                  })
+                }
               />
             </View>
           )}
@@ -186,20 +208,22 @@ export default function EventScreen() {
           <View style={styles.cardOuter}>
             <View style={styles.cardInner}>
               <View style={styles.titleSection}>
-                <Text style={styles.titleText}>{event.name}</Text>
+                <Text style={styles.titleText}>{event.name.toUpperCase()}</Text>
               </View>
               <Divider />
               <View style={styles.infoRow}>
                 <View style={styles.infoCol}>
                   <Text style={styles.infoLabel}>Date/ Time</Text>
-                  <Text style={styles.infoValue}>{event.dateTime}</Text>
+                  <Text style={styles.infoValue}>
+                    {formatEventDateTime(event.event_date, event.start_time)}
+                  </Text>
                 </View>
                 <View style={styles.verticalDividerWrap}>
                   <View style={styles.verticalDivider} />
                 </View>
                 <View style={styles.infoColRight}>
                   <Text style={styles.infoLabel}>Location</Text>
-                  <Text style={styles.infoValue}>{event.location}</Text>
+                  <Text style={styles.infoValue}>{event.location_name ?? 'TBD'}</Text>
                 </View>
               </View>
               <Divider />
@@ -212,7 +236,7 @@ export default function EventScreen() {
                       size="Sm"
                     />
                     <Text style={styles.infoValue}>
-                      {hosts.map((h) => h.name).join(', ')}
+                      {hosts.map((h) => h.display_name).join(', ')}
                     </Text>
                   </View>
                 </View>
@@ -221,7 +245,9 @@ export default function EventScreen() {
                 </View>
                 <View style={styles.infoColRight}>
                   <Text style={styles.infoLabel}>Fee</Text>
-                  <Text style={styles.infoValue}>{detail.fee}</Text>
+                  <Text style={styles.infoValue}>
+                    {formatFee(event.fee_amount, event.fee_frequency)}
+                  </Text>
                 </View>
               </View>
             </View>
@@ -231,15 +257,14 @@ export default function EventScreen() {
           <View style={styles.cardOuter}>
             <View style={styles.cardInner}>
               <View style={styles.levelsWrap}>
-                <Levels indicator={event.level} />
+                <Levels indicator={skillLevelToNumber(event.skill_level)} />
               </View>
               <View style={styles.mutualsRow}>
-                <Avatar type="Image" size="Lg" showCount count={3} />
+                <Avatar type="Image" size="Lg" showCount count={memberCount} />
                 <Text style={styles.mutualTextWrap}>
                   <Text style={styles.mutualHighlight}>
-                    {event.mutualHighlight}{' '}
+                    {memberCount} attending
                   </Text>
-                  <Text style={styles.mutualBody}>{event.mutualBody}</Text>
                 </Text>
               </View>
             </View>
@@ -250,12 +275,17 @@ export default function EventScreen() {
             <View style={styles.cardInner}>
               <View style={styles.vibeRow}>
                 <Text style={styles.infoLabel}>Vibe</Text>
-                <Tag label={detail.vibe} selected size="Sm" style={{ minWidth: 145 }} />
+                <Tag
+                  label={event.vibe ? event.vibe.charAt(0).toUpperCase() + event.vibe.slice(1) : 'Casual'}
+                  selected
+                  size="Sm"
+                  style={{ minWidth: 145 }}
+                />
               </View>
               <Divider />
               <View style={styles.descriptionWrap}>
                 <Text style={styles.descriptionText}>
-                  {detail.description}
+                  {event.description ?? 'No description yet.'}
                 </Text>
               </View>
             </View>
@@ -271,63 +301,54 @@ export default function EventScreen() {
                   placeholder="Search Members"
                 />
 
-                {filteredFriends.length > 0 && (
-                  <View style={styles.membersSection}>
-                    <Text style={styles.membersSectionTitle}>Friends</Text>
-                    <View style={styles.membersList}>
-                      {filteredFriends.map((friend) => (
-                        <MembersItem
-                          key={friend.id}
-                          avatar={<Avatar type="Image" size="Lg" />}
-                          name={friend.name}
-                          showIcon={false}
-                          onPress={() => navigateToUser(friend.id)}
-                        />
-                      ))}
-                    </View>
-                  </View>
-                )}
-
-                {filteredOthers.length > 0 && (
+                {attendeesLoading ? (
+                  <ActivityIndicator size="small" color={colors.text.subtle} />
+                ) : filteredMembers.length > 0 ? (
                   <View style={styles.membersSection}>
                     <Text style={styles.membersSectionTitle}>
-                      Other Members
+                      Members ({filteredMembers.length})
                     </Text>
                     <View style={styles.membersList}>
-                      {filteredOthers.map((member) => {
-                        const isPending = pendingFriendIds.has(member.id);
+                      {filteredMembers.map((member) => {
+                        const isSelf = member.id === user?.id;
+                        const isPendingFriend = pendingFriendIds.has(member.id);
                         return (
                           <MembersItem
                             key={member.id}
                             avatar={<Avatar type="Image" size="Lg" />}
-                            name={member.name}
-                            showIcon
-                            icon={({ size }) =>
-                              isPending ? (
-                                <Icon
-                                  type="clock"
-                                  size={size}
-                                  color={colors.icon.subtle}
-                                />
-                              ) : (
-                                <Icon
-                                  type="add friend"
-                                  size={size}
-                                  color={colors.icon.bold}
-                                />
-                              )
+                            name={member.display_name}
+                            showIcon={!isSelf}
+                            icon={
+                              !isSelf
+                                ? ({ size }) =>
+                                    isPendingFriend ? (
+                                      <Icon
+                                        type="clock"
+                                        size={size}
+                                        color={colors.icon.subtle}
+                                      />
+                                    ) : (
+                                      <Icon
+                                        type="add friend"
+                                        size={size}
+                                        color={colors.icon.bold}
+                                      />
+                                    )
+                                : undefined
                             }
                             onIconPress={
-                              isPending
-                                ? undefined
-                                : () => handleSendFriendRequest(member.id)
+                              !isSelf && !isPendingFriend
+                                ? () => handleSendFriendRequest(member.id)
+                                : undefined
                             }
-                            onPress={() => navigateToUser(member.id)}
+                            onPress={() => !isSelf && navigateToUser(member.id)}
                           />
                         );
                       })}
                     </View>
                   </View>
+                ) : (
+                  <Text style={styles.emptyText}>No members found</Text>
                 )}
               </View>
             </View>
@@ -364,33 +385,25 @@ export default function EventScreen() {
                   )}
                 />
               </View>
-            ) : event.adminApproval ? (
+            ) : event.requires_approval ? (
               <Pressable
-                style={[styles.joinButton, { backgroundColor: event.ctaColor }]}
+                style={[styles.joinButton, { backgroundColor: ctaColors.bg }]}
                 onPress={handleJoinToggle}
               >
-                <Text style={[styles.joinButtonText, { color: event.ctaTextColor }]}>
+                <Text style={[styles.joinButtonText, { color: ctaColors.text }]}>
                   Request
                 </Text>
-                <Icon
-                  type="lock"
-                  size={16}
-                  color={event.ctaTextColor}
-                />
+                <Icon type="lock" size={16} color={ctaColors.text} />
               </Pressable>
             ) : (
               <Pressable
-                style={[styles.joinButton, { backgroundColor: event.ctaColor }]}
+                style={[styles.joinButton, { backgroundColor: ctaColors.bg }]}
                 onPress={handleJoinToggle}
               >
-                <Text style={[styles.joinButtonText, { color: event.ctaTextColor }]}>
+                <Text style={[styles.joinButtonText, { color: ctaColors.text }]}>
                   Join
                 </Text>
-                <Icon
-                  type="arrow forward"
-                  size={16}
-                  color={event.ctaTextColor}
-                />
+                <Icon type="arrow forward" size={16} color={ctaColors.text} />
               </Pressable>
             )}
             <View style={styles.bottomActionButton}>
@@ -402,6 +415,7 @@ export default function EventScreen() {
                 trailingIcon={({ color, size }) => (
                   <Icon type="share" size={size} color={color} />
                 )}
+                onPress={handleShare}
               />
             </View>
           </View>
@@ -595,7 +609,14 @@ const styles = StyleSheet.create({
     gap: spacer['12'],
   },
 
-  // Bottom action (above bottom nav: paddingTop 24 + icon 36 = 60)
+  emptyText: {
+    ...textStyles.body03Light,
+    color: colors.text.subtle,
+    textAlign: 'center',
+    paddingVertical: spacer['24'],
+  },
+
+  // Bottom action
   bottomActionWrap: {
     position: 'absolute',
     bottom: 60,

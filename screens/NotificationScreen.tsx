@@ -1,106 +1,37 @@
 /**
  * NotificationScreen — Full-screen notification list
  *
- * Layout (from Figma node 1057:22103, updated prototype):
+ * Layout (from Figma node 1057:22103):
  *   Back button: Subtle Sm Icon (arrow-back) → goBack()
  *   Title: "Notification" (headline02Medium)
  *   Items list: NotificationItem rows, gap spacer/24
- *   Avatars: no +count badge (a=false)
- *   BottomNav: handled by TabNavigator
  *
- * Notification types shown:
- *   - Info only (no buttons, with description)
- *   - Friend request pending (with ✕ ✓ buttons, no description)
- *   - Request accepted (just ✓ icon, no description)
+ * Data: fetches notifications from Supabase.
  */
 
-import React, { useState } from 'react';
-import { View, Text, ScrollView, StyleSheet } from 'react-native';
+import React, { useCallback } from 'react';
+import { View, Text, ScrollView, ActivityIndicator, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { colors } from '../lib/tokens/colors';
 import { spacer } from '../lib/tokens/spacing';
 import { textStyles } from '../lib/tokens/textStyles';
 import { Avatar, Button, NotificationItem, Icon } from '../components/ui';
-
-// ─── Mock notification data (from Figma prototype) ───────
-
-type NotificationData = {
-  id: string;
-  text: string;
-  description?: string;
-  friendRequest: boolean;
-  requestAccepted?: boolean;
-};
-
-const NOTIFICATIONS: NotificationData[] = [
-  // ── Info notifications (no buttons, with description) ──
-  {
-    id: 'n-1',
-    text: 'Ling has joined Cool Pickleball Club',
-    description: 'Visit Cool Pickleball Club Page',
-    friendRequest: false,
-  },
-  {
-    id: 'n-2',
-    text: 'Ling is attending Cooler Basketball Event',
-    description: 'Visit Cooler Basketball Event Page',
-    friendRequest: false,
-  },
-  {
-    id: 'n-3',
-    text: 'Cool Pickleball Club has new event added',
-    description: '12/31 Tue 2PM · Beginner · $20',
-    friendRequest: false,
-  },
-  {
-    id: 'n-4',
-    text: 'Saturday Running Crew cancelled this week',
-    description: 'Due to weather conditions',
-    friendRequest: false,
-  },
-  // ── Friend request pending (with ✕ ✓ buttons) ──
-  {
-    id: 'n-5',
-    text: 'Ling sent a friend request',
-    friendRequest: true,
-  },
-  // ── Request accepted (just ✓ icon) ──
-  {
-    id: 'n-6',
-    text: 'Ling sent a friend request',
-    friendRequest: true,
-    requestAccepted: true,
-  },
-  // ── More friend requests with buttons ──
-  {
-    id: 'n-7',
-    text: "You accepted Ling's friend request",
-    friendRequest: true,
-  },
-  {
-    id: 'n-8',
-    text: 'Lillian requested to join Cool Pickleball Club',
-    friendRequest: true,
-  },
-];
+import { useNotifications } from '../lib/hooks/useNotifications';
+import { markNotificationActedOn } from '../lib/api/notifications';
 
 export default function NotificationScreen() {
   const navigation = useNavigation();
-  const [items, setItems] = useState<NotificationData[]>(NOTIFICATIONS);
+  const { data: notifications, loading, refetch } = useNotifications();
 
-  /** ✓ Accept → change item to requestAccepted state */
-  const handleAccept = (id: string) => {
-    setItems((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, requestAccepted: true } : item,
-      ),
-    );
-  };
+  const handleAccept = useCallback(async (id: string) => {
+    await markNotificationActedOn(id);
+    refetch();
+  }, [refetch]);
 
-  /** ✕ Decline → remove item from list */
-  const handleDecline = (id: string) => {
-    setItems((prev) => prev.filter((item) => item.id !== id));
-  };
+  const handleDecline = useCallback(async (id: string) => {
+    await markNotificationActedOn(id);
+    refetch();
+  }, [refetch]);
 
   return (
     <View style={styles.container}>
@@ -123,23 +54,29 @@ export default function NotificationScreen() {
 
         {/* ── Notification Items ───────────────────────── */}
         <View style={styles.itemsList}>
-          {items.map((n) => (
-            <NotificationItem
-              key={n.id}
-              avatar={
-                <Avatar
-                  type="Image"
-                  size="Lg"
+          {loading ? (
+            <ActivityIndicator size="large" color={colors.text.subtle} style={{ marginTop: spacer['24'] }} />
+          ) : (notifications ?? []).length === 0 ? (
+            <Text style={styles.emptyText}>No notifications yet</Text>
+          ) : (
+            (notifications ?? []).map((n) => {
+              const isFriendRequest = n.type === 'friend_request' || n.type === 'join_request';
+              const isAccepted = n.is_acted_on;
+
+              return (
+                <NotificationItem
+                  key={n.id}
+                  avatar={<Avatar type="Image" size="Lg" />}
+                  text={n.body}
+                  description={!isFriendRequest ? n.title : undefined}
+                  friendRequest={isFriendRequest}
+                  requestAccepted={isFriendRequest ? isAccepted : undefined}
+                  onAccept={() => handleAccept(n.id)}
+                  onDecline={() => handleDecline(n.id)}
                 />
-              }
-              text={n.text}
-              description={n.description}
-              friendRequest={n.friendRequest}
-              requestAccepted={n.requestAccepted}
-              onAccept={() => handleAccept(n.id)}
-              onDecline={() => handleDecline(n.id)}
-            />
-          ))}
+              );
+            })
+          )}
         </View>
       </ScrollView>
     </View>
@@ -173,5 +110,12 @@ const styles = StyleSheet.create({
 
   itemsList: {
     gap: spacer['24'],
+  },
+
+  emptyText: {
+    ...textStyles.body03Light,
+    color: colors.text.subtle,
+    textAlign: 'center',
+    paddingVertical: spacer['24'],
   },
 });

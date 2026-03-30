@@ -4,23 +4,27 @@
  * Layout:
  *   Hero cover (full viewport height placeholder)
  *   Floating nav (back, notification, search; edit if admin)
- *   Section 1: Club Info (title, date/time, location, admin, fee)
+ *   Section 1: Club Info (title, sport/location, admin, fee)
  *   Section 2: Levels + Mutuals
  *   Section 3: Vibe + Description
  *   Section 4: Events / Members tabs
  *   Bottom action bar (Join/Joined + Share)
+ *
+ * Data: fetches club, members, events from Supabase.
  */
 
-import React, { useState, useMemo, useCallback, type ReactNode } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import {
   View,
   Text,
   ScrollView,
   Pressable,
+  ActivityIndicator,
   StyleSheet,
   Image,
   Dimensions,
   Platform,
+  Share,
   type ViewStyle,
 } from 'react-native';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
@@ -40,15 +44,9 @@ import {
   Tab,
   Tag,
 } from '../components/ui';
-import {
-  CLUBS,
-  CURRENT_USER,
-  getClubDetail,
-  getClubMembers,
-  getClubEvents,
-  getClubAdmins,
-  type UserProfile,
-} from '../lib/data/mockData';
+import { useAuth } from '../lib/AuthContext';
+import { useClub, useClubMembers, useClubEvents, useClubMembership } from '../lib/hooks/useClubs';
+import { skillLevelToNumber, formatFee, eventToCardProps, getCtaColors } from '../lib/api/transforms';
 import type { DiscoverStackParamList } from '../navigation/DiscoverStack';
 
 const SCREEN_HEIGHT = Dimensions.get('window').height;
@@ -59,53 +57,67 @@ export default function ClubScreen() {
   const navigation = useNavigation<any>();
   const route = useRoute<RouteProp<DiscoverStackParamList, 'Club'>>();
   const { clubId } = route.params;
+  const { user } = useAuth();
 
-  // Data
-  const club = useMemo(() => CLUBS.find((c) => c.id === clubId), [clubId]);
-  const detail = useMemo(() => getClubDetail(clubId), [clubId]);
-  const admins = useMemo(() => getClubAdmins(clubId), [clubId]);
-  const { friends: memberFriends, others: memberOthers } = useMemo(
-    () => getClubMembers(clubId),
-    [clubId],
+  // Fetch real data from Supabase
+  const { data: club, loading: clubLoading } = useClub(clubId);
+  const { data: members, loading: membersLoading } = useClubMembers(clubId);
+  const { data: clubEvents, loading: eventsLoading } = useClubEvents(clubId);
+  const { data: membership, join, leave } = useClubMembership(clubId);
+
+  // Derived data
+  const admins = useMemo(
+    () => (members ?? []).filter((m) => m.role === 'admin').map((m) => m.user),
+    [members],
   );
-  const clubEvents = useMemo(() => getClubEvents(clubId), [clubId]);
+  const allMembers = useMemo(
+    () => (members ?? []).map((m) => m.user),
+    [members],
+  );
+  const memberCount = allMembers.length;
+
+  const isJoined = membership?.status === 'approved';
+  const isPending = membership?.status === 'pending';
+  const isAdmin = admins.some((a) => a.id === user?.id);
+
+  const handleShare = useCallback(async () => {
+    if (!club) return;
+    try {
+      await Share.share({
+        message: `Check out ${club.name} on Spooorty!${club.location_name ? ` \u{1F4CD} ${club.location_name}` : ''}`,
+        // url: `https://spooorty.app/club/${club.id}`, // enable when deep links are live
+      });
+    } catch (_) {}
+  }, [club]);
 
   // State
-  type JoinState = 'Enabled' | 'Pending' | 'Joined';
-  const [joinState, setJoinState] = useState<JoinState>(
-    CURRENT_USER.clubIds.includes(clubId) ? 'Joined' : 'Enabled',
-  );
-  const isJoined = joinState === 'Joined';
-  const isPending = joinState === 'Pending';
-  const isAdmin = useMemo(
-    () => detail?.adminIds.includes(CURRENT_USER.id) ?? false,
-    [detail],
-  );
-  const [selectedTab, setSelectedTab] = useState(isJoined ? 1 : 0);
+  const [selectedTab, setSelectedTab] = useState(0);
   const [memberSearch, setMemberSearch] = useState('');
   const [eventCardStates, setEventCardStates] = useState<Record<string, 'Pending' | 'Joined'>>({});
   const [pendingFriendIds, setPendingFriendIds] = useState<Set<string>>(new Set());
 
-  // Filtered members
-  const filteredFriends = useMemo(() => {
-    if (!memberSearch.trim()) return memberFriends;
-    const q = memberSearch.toLowerCase();
-    return memberFriends.filter((f) => f.name.toLowerCase().includes(q));
-  }, [memberFriends, memberSearch]);
+  // Filtered members for search
+  const filteredMembers = useMemo(() => {
+    const q = memberSearch.toLowerCase().trim();
+    if (!q) return allMembers;
+    return allMembers.filter((m) => m.display_name.toLowerCase().includes(q));
+  }, [allMembers, memberSearch]);
 
-  const filteredOthers = useMemo(() => {
-    if (!memberSearch.trim()) return memberOthers;
-    const q = memberSearch.toLowerCase();
-    return memberOthers.filter((m) => m.name.toLowerCase().includes(q));
-  }, [memberOthers, memberSearch]);
+  // Transform events to card props
+  const eventCards = useMemo(
+    () => (clubEvents ?? []).map((e, i) => eventToCardProps(e, i)),
+    [clubEvents],
+  );
 
-  const handleJoinToggle = useCallback(() => {
-    setJoinState((prev) => {
-      if (prev === 'Joined') return 'Enabled';
-      if (prev === 'Pending') return 'Pending';
-      return club?.adminApproval ? 'Pending' : 'Joined';
-    });
-  }, [club?.adminApproval]);
+  const ctaColors = getCtaColors(0);
+
+  const handleJoinToggle = useCallback(async () => {
+    if (isJoined) {
+      await leave();
+    } else if (!isPending) {
+      await join();
+    }
+  }, [isJoined, isPending, join, leave]);
 
   const handleSendFriendRequest = useCallback((userId: string) => {
     setPendingFriendIds((prev) => {
@@ -135,7 +147,15 @@ export default function ClubScreen() {
     [navigation],
   );
 
-  if (!club || !detail) {
+  if (clubLoading) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color={colors.text.subtle} />
+      </View>
+    );
+  }
+
+  if (!club) {
     return (
       <View style={styles.container}>
         <Text style={styles.notFound}>Club not found</Text>
@@ -147,7 +167,7 @@ export default function ClubScreen() {
     <View style={styles.container}>
       {/* ── Hero Cover (absolute, behind all content) ───── */}
       <Image
-        source={{ uri: 'https://picsum.photos/800/1200' }}
+        source={{ uri: club.cover_photo_url || 'https://picsum.photos/800/1200' }}
         style={styles.heroCover}
         resizeMode="cover"
       />
@@ -198,6 +218,12 @@ export default function ClubScreen() {
                 icon={({ color, size }) => (
                   <Icon type="edit" size={size} color={color} />
                 )}
+                onPress={() =>
+                  navigation.navigate('Create', {
+                    screen: 'CreateClub',
+                    params: { editClubId: clubId },
+                  })
+                }
               />
             </View>
           )}
@@ -205,20 +231,20 @@ export default function ClubScreen() {
           <View style={styles.cardOuter}>
             <View style={styles.cardInner}>
               <View style={styles.titleSection}>
-                <Text style={styles.titleText}>{club.name}</Text>
+                <Text style={styles.titleText}>{club.name.toUpperCase()}</Text>
               </View>
               <Divider />
               <View style={styles.infoRow}>
                 <View style={styles.infoCol}>
                   <Text style={styles.infoLabel}>Type</Text>
-                  <Text style={styles.infoValue}>{club.sports ?? 'Pickleball'}</Text>
+                  <Text style={styles.infoValue}>{club.sport ?? 'General'}</Text>
                 </View>
                 <View style={styles.verticalDividerWrap}>
                   <View style={styles.verticalDivider} />
                 </View>
                 <View style={styles.infoColRight}>
                   <Text style={styles.infoLabel}>Location</Text>
-                  <Text style={styles.infoValue}>{club.location}</Text>
+                  <Text style={styles.infoValue}>{club.location_name ?? 'TBD'}</Text>
                 </View>
               </View>
               <Divider />
@@ -231,7 +257,7 @@ export default function ClubScreen() {
                       size="Sm"
                     />
                     <Text style={styles.infoValue}>
-                      {admins.map((a) => a.name).join(', ')}
+                      {admins.map((a) => a.display_name).join(', ')}
                     </Text>
                   </View>
                 </View>
@@ -240,7 +266,9 @@ export default function ClubScreen() {
                 </View>
                 <View style={styles.infoColRight}>
                   <Text style={styles.infoLabel}>Fee</Text>
-                  <Text style={styles.infoValue}>{detail.fee}</Text>
+                  <Text style={styles.infoValue}>
+                    {formatFee(club.fee_amount, club.fee_frequency)}
+                  </Text>
                 </View>
               </View>
             </View>
@@ -250,15 +278,14 @@ export default function ClubScreen() {
           <View style={styles.cardOuter}>
             <View style={styles.cardInner}>
               <View style={styles.levelsWrap}>
-                <Levels indicator={club.level} />
+                <Levels indicator={skillLevelToNumber(club.skill_level)} />
               </View>
               <View style={styles.mutualsRow}>
-                <Avatar type="Image" size="Lg" showCount count={3} />
+                <Avatar type="Image" size="Lg" showCount count={memberCount} />
                 <Text style={styles.mutualTextWrap}>
                   <Text style={styles.mutualHighlight}>
-                    {club.mutualHighlight}{' '}
+                    {memberCount} members
                   </Text>
-                  <Text style={styles.mutualBody}>{club.mutualBody}</Text>
                 </Text>
               </View>
             </View>
@@ -269,12 +296,17 @@ export default function ClubScreen() {
             <View style={styles.cardInner}>
               <View style={styles.vibeRow}>
                 <Text style={styles.infoLabel}>Vibe</Text>
-                <Tag label={detail.vibe} selected size="Sm" style={{ minWidth: 145 }} />
+                <Tag
+                  label={club.vibe ? club.vibe.charAt(0).toUpperCase() + club.vibe.slice(1) : 'Casual'}
+                  selected
+                  size="Sm"
+                  style={{ minWidth: 145 }}
+                />
               </View>
               <Divider />
               <View style={styles.descriptionWrap}>
                 <Text style={styles.descriptionText}>
-                  {detail.description}
+                  {club.description ?? 'No description yet.'}
                 </Text>
               </View>
             </View>
@@ -304,8 +336,10 @@ export default function ClubScreen() {
                       })}
                     />
                   )}
-                  {clubEvents.length > 0 ? (
-                    clubEvents.map((event) => (
+                  {eventsLoading ? (
+                    <ActivityIndicator size="small" color={colors.text.subtle} />
+                  ) : eventCards.length > 0 ? (
+                    eventCards.map((event) => (
                       <InnerContentCard
                         key={event.id}
                         name={event.name}
@@ -313,15 +347,8 @@ export default function ClubScreen() {
                         location={event.location}
                         level={event.level}
                         avatar={
-                          <Avatar
-                            type="Image"
-                            size="Lg"
-                            showCount
-                            count={3}
-                          />
+                          <Avatar type="Image" size="Lg" showCount count={3} />
                         }
-                        mutualHighlight={event.mutualHighlight}
-                        mutualBody={event.mutualBody}
                         price={event.price}
                         state={eventCardStates[event.id] ?? 'Enabled'}
                         ctaLabel={event.ctaLabel}
@@ -345,63 +372,54 @@ export default function ClubScreen() {
                     placeholder="Search Members"
                   />
 
-                  {filteredFriends.length > 0 && (
-                    <View style={styles.membersSection}>
-                      <Text style={styles.membersSectionTitle}>Friends</Text>
-                      <View style={styles.membersList}>
-                        {filteredFriends.map((friend) => (
-                          <MembersItem
-                            key={friend.id}
-                            avatar={<Avatar type="Image" size="Lg" />}
-                            name={friend.name}
-                            showIcon={false}
-                            onPress={() => navigateToUser(friend.id)}
-                          />
-                        ))}
-                      </View>
-                    </View>
-                  )}
-
-                  {filteredOthers.length > 0 && (
+                  {membersLoading ? (
+                    <ActivityIndicator size="small" color={colors.text.subtle} />
+                  ) : filteredMembers.length > 0 ? (
                     <View style={styles.membersSection}>
                       <Text style={styles.membersSectionTitle}>
-                        Other Members
+                        Members ({filteredMembers.length})
                       </Text>
                       <View style={styles.membersList}>
-                        {filteredOthers.map((member) => {
-                          const isPending = pendingFriendIds.has(member.id);
+                        {filteredMembers.map((member) => {
+                          const isSelf = member.id === user?.id;
+                          const isPendingFriend = pendingFriendIds.has(member.id);
                           return (
                             <MembersItem
                               key={member.id}
                               avatar={<Avatar type="Image" size="Lg" />}
-                              name={member.name}
-                              showIcon
-                              icon={({ size }) =>
-                                isPending ? (
-                                  <Icon
-                                    type="clock"
-                                    size={size}
-                                    color={colors.icon.subtle}
-                                  />
-                                ) : (
-                                  <Icon
-                                    type="add friend"
-                                    size={size}
-                                    color={colors.icon.bold}
-                                  />
-                                )
+                              name={member.display_name}
+                              showIcon={!isSelf}
+                              icon={
+                                !isSelf
+                                  ? ({ size }) =>
+                                      isPendingFriend ? (
+                                        <Icon
+                                          type="clock"
+                                          size={size}
+                                          color={colors.icon.subtle}
+                                        />
+                                      ) : (
+                                        <Icon
+                                          type="add friend"
+                                          size={size}
+                                          color={colors.icon.bold}
+                                        />
+                                      )
+                                  : undefined
                               }
                               onIconPress={
-                                isPending
-                                  ? undefined
-                                  : () => handleSendFriendRequest(member.id)
+                                !isSelf && !isPendingFriend
+                                  ? () => handleSendFriendRequest(member.id)
+                                  : undefined
                               }
-                              onPress={() => navigateToUser(member.id)}
+                              onPress={() => !isSelf && navigateToUser(member.id)}
                             />
                           );
                         })}
                       </View>
                     </View>
+                  ) : (
+                    <Text style={styles.emptyText}>No members found</Text>
                   )}
                 </View>
               )}
@@ -439,33 +457,25 @@ export default function ClubScreen() {
                   )}
                 />
               </View>
-            ) : club.adminApproval ? (
+            ) : club.requires_approval ? (
               <Pressable
-                style={[styles.joinButton, { backgroundColor: club.ctaColor }]}
+                style={[styles.joinButton, { backgroundColor: ctaColors.bg }]}
                 onPress={handleJoinToggle}
               >
-                <Text style={[styles.joinButtonText, { color: club.ctaTextColor }]}>
+                <Text style={[styles.joinButtonText, { color: ctaColors.text }]}>
                   Request
                 </Text>
-                <Icon
-                  type="lock"
-                  size={16}
-                  color={club.ctaTextColor}
-                />
+                <Icon type="lock" size={16} color={ctaColors.text} />
               </Pressable>
             ) : (
               <Pressable
-                style={[styles.joinButton, { backgroundColor: club.ctaColor }]}
+                style={[styles.joinButton, { backgroundColor: ctaColors.bg }]}
                 onPress={handleJoinToggle}
               >
-                <Text style={[styles.joinButtonText, { color: club.ctaTextColor }]}>
+                <Text style={[styles.joinButtonText, { color: ctaColors.text }]}>
                   Join
                 </Text>
-                <Icon
-                  type="arrow forward"
-                  size={16}
-                  color={club.ctaTextColor}
-                />
+                <Icon type="arrow forward" size={16} color={ctaColors.text} />
               </Pressable>
             )}
             <View style={styles.bottomActionButton}>
@@ -477,6 +487,7 @@ export default function ClubScreen() {
                 trailingIcon={({ color, size }) => (
                   <Icon type="share" size={size} color={color} />
                 )}
+                onPress={handleShare}
               />
             </View>
           </View>
@@ -588,7 +599,6 @@ const styles = StyleSheet.create({
     ...textStyles.title02Medium,
     color: colors.text.bold,
   },
-
 
   infoValue: {
     ...textStyles.body03Light,

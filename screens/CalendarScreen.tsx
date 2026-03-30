@@ -8,23 +8,19 @@
  *   Event cards: CardLg list for the selected/displayed date
  *   BottomNav: handled by TabNavigator
  *
- * Default behaviour: show today's events, or nearest upcoming date with events.
+ * Data: fetches events from Supabase for the visible month.
  */
 
 import React, { useState, useMemo, useCallback } from 'react';
-import { View, Text, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, ActivityIndicator, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { colors } from '../lib/tokens/colors';
 import { spacer } from '../lib/tokens/spacing';
 import { textStyles } from '../lib/tokens/textStyles';
 import { Avatar, Button, EventCardLg, Calendar, Icon } from '../components/ui';
-import {
-  getEventsForDate,
-  getEventDaysForMonth,
-  getEventCountsForMonth,
-  getNearestEventDay,
-  type CalendarEvent,
-} from '../lib/data/mockData';
+import { useMonthEvents } from '../lib/hooks/useEvents';
+import { eventToCardProps } from '../lib/api/transforms';
+import type { DbEvent } from '../lib/database/types';
 
 // ─── Date formatting helpers ─────────────────────────────
 const DAY_NAMES = [
@@ -41,39 +37,59 @@ function formatDateLabel(year: number, month: number, day: number): string {
   return `${DAY_NAMES[d.getDay()]}, ${MONTH_NAMES[month]} ${day}`;
 }
 
+/** Extract day number from a YYYY-MM-DD date string */
+function dayFromDate(dateStr: string): number {
+  return parseInt(dateStr.slice(8), 10);
+}
+
 // ─── Component ──────────────────────────────────────────
 
 export default function CalendarScreen() {
   const navigation = useNavigation<any>();
-  // Demo: use Jan 2024 to match Figma mock data
-  const todayDay = 18; // Demo "today"
-  const [year, setYear] = useState(2024);
-  const [month, setMonth] = useState(0); // 0 = January
+  const now = new Date();
+  const todayDay = now.getDate();
+  const [year, setYear] = useState(now.getFullYear());
+  const [month, setMonth] = useState(now.getMonth()); // 0-indexed
   const [selectedDay, setSelectedDay] = useState<number>(todayDay);
   const [cardStates, setCardStates] = useState<Record<string, 'Pending' | 'Joined'>>({});
 
-  // Event days for indicator dots
-  const eventDays = useMemo(
-    () => getEventDaysForMonth(year, month + 1),
-    [year, month],
-  );
+  // Fetch events for the visible month from Supabase (month+1 for 1-indexed)
+  const { data: monthEvents, loading } = useMonthEvents(year, month + 1);
 
-  // Event counts per day (for dot count in DateCell)
-  const eventCounts = useMemo(
-    () => getEventCountsForMonth(year, month + 1),
-    [year, month],
-  );
+  // Derive event days & counts from real data
+  const eventDays = useMemo(() => {
+    if (!monthEvents) return [];
+    const days = new Set<number>();
+    monthEvents.forEach((e) => days.add(dayFromDate(e.event_date)));
+    return Array.from(days).sort((a, b) => a - b);
+  }, [monthEvents]);
 
-  // Find nearest event day from selected day for the event list
+  const eventCounts = useMemo(() => {
+    if (!monthEvents) return {};
+    const counts: Record<number, number> = {};
+    monthEvents.forEach((e) => {
+      const day = dayFromDate(e.event_date);
+      counts[day] = (counts[day] || 0) + 1;
+    });
+    return counts;
+  }, [monthEvents]);
+
+  // Find nearest event day from selected day
   const displayDay = useMemo(() => {
-    return getNearestEventDay(year, month + 1, selectedDay) ?? selectedDay;
-  }, [selectedDay, year, month]);
+    if (eventDays.includes(selectedDay)) return selectedDay;
+    const upcoming = eventDays.filter((d) => d >= selectedDay);
+    if (upcoming.length > 0) return upcoming[0];
+    return selectedDay;
+  }, [selectedDay, eventDays]);
 
-  // Events for the displayed day
-  const events: CalendarEvent[] = useMemo(
-    () => getEventsForDate(year, month + 1, displayDay),
-    [year, month, displayDay],
-  );
+  // Events for the displayed day, transformed to card props
+  const dayEvents = useMemo(() => {
+    if (!monthEvents) return [];
+    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(displayDay).padStart(2, '0')}`;
+    return monthEvents
+      .filter((e) => e.event_date === dateStr)
+      .map((e, i) => eventToCardProps(e, i));
+  }, [monthEvents, year, month, displayDay]);
 
   const handlePrevMonth = useCallback(() => {
     setMonth((prev) => {
@@ -149,7 +165,7 @@ export default function CalendarScreen() {
             year={year}
             month={month}
             selectedDay={selectedDay}
-            todayDay={todayDay}
+            todayDay={year === now.getFullYear() && month === now.getMonth() ? todayDay : undefined}
             eventDays={eventDays}
             eventCounts={eventCounts}
             onSelectDay={handleSelectDay}
@@ -163,7 +179,14 @@ export default function CalendarScreen() {
               {formatDateLabel(year, month, displayDay)}
             </Text>
 
-            {events.map((event) => (
+            {loading ? (
+              <ActivityIndicator
+                size="large"
+                color={colors.text.subtle}
+                style={{ marginTop: spacer['24'] }}
+              />
+            ) : dayEvents.length > 0 ? (
+              dayEvents.map((event) => (
                 <EventCardLg
                   key={event.id}
                   name={event.name}
@@ -173,8 +196,6 @@ export default function CalendarScreen() {
                   avatar={
                     <Avatar type="Image" size="Lg" showCount count={3} />
                   }
-                  mutualHighlight={event.mutualHighlight}
-                  mutualBody={event.mutualBody}
                   price={event.price}
                   state={cardStates[event.id] ?? 'Enabled'}
                   ctaLabel={event.ctaLabel}
@@ -184,7 +205,10 @@ export default function CalendarScreen() {
                   onCtaPress={() => handleCtaPress(event.id, event.adminApproval)}
                   onPress={() => navigation.push('Event', { eventId: event.id })}
                 />
-            ))}
+              ))
+            ) : (
+              <Text style={styles.emptyText}>No events on this day</Text>
+            )}
           </View>
         </View>
       </ScrollView>
@@ -239,5 +263,12 @@ const styles = StyleSheet.create({
   dateLabel: {
     ...textStyles.title01Medium,
     color: colors.text.bold,
+  },
+
+  emptyText: {
+    ...textStyles.body03Light,
+    color: colors.text.subtle,
+    textAlign: 'center',
+    paddingVertical: spacer['24'],
   },
 });

@@ -2,6 +2,7 @@
  * Input component — mapped from Figma component documentation
  *
  * Props (from Figma properties):
+ *   size: Sm | Md (default Sm)
  *   state: Enabled | Active | Filled (managed internally via focus/value)
  *   placeholder: string
  *   value / onChangeText: controlled input
@@ -9,9 +10,9 @@
  * Anatomy (from Figma docs):
  *   Shape: pill (borderRadius round), borderWidth 0.5
  *   Border: border/subtle default, border/bold on focus
- *   Padding: spacer/12 all around, gap spacer/8
- *   Text: body03Light, text/subtle placeholder, text/bold value
- *   Trailing icon: 12px pencil (edit), always visible
+ *   Sm: padding spacer/12, text body03Light (12px), icon 12px
+ *   Md: padding spacer/16, text title02Light (16px), icon 16px
+ *   Trailing icon: pencil (edit), always visible
  */
 
 import React, { useState } from 'react';
@@ -29,31 +30,54 @@ import { textStyles } from '../../lib/tokens/textStyles';
 
 // ─── Types ──────────────────────────────────────────────
 
+type InputSize = 'Sm' | 'Md';
+
 export type InputProps = {
+  size?: InputSize;
   placeholder?: string;
   value?: string;
   onChangeText?: (text: string) => void;
 } & Omit<TextInputProps, 'style' | 'placeholderTextColor'>;
 
+// ─── Size config ────────────────────────────────────────
+
+const SIZE_CONFIG = {
+  Sm: {
+    padding: spacer['12'],
+    textStyle: textStyles.body03Light,
+    iconSize: 12,
+  },
+  Md: {
+    padding: spacer['16'],
+    textStyle: textStyles.title02Light,
+    iconSize: 16,
+  },
+} as const;
+
 // ─── Component ──────────────────────────────────────────
 
 export default function Input({
+  size = 'Sm',
   placeholder = 'Enter text',
   value,
   onChangeText,
   ...rest
 }: InputProps) {
   const [focused, setFocused] = useState(false);
+  const config = SIZE_CONFIG[size];
 
   return (
     <View
       style={[
         styles.container,
-        { borderColor: focused ? colors.border.bold : colors.border.subtle },
+        {
+          padding: config.padding,
+          borderColor: focused ? colors.border.bold : colors.border.subtle,
+        },
       ]}
     >
       <TextInput
-        style={styles.input}
+        style={[styles.input, config.textStyle]}
         placeholder={placeholder}
         placeholderTextColor={colors.text.subtle}
         value={value}
@@ -68,10 +92,15 @@ export default function Input({
         }}
         {...rest}
       />
-      <View style={styles.iconWrap}>
+      <View
+        style={[
+          styles.iconWrap,
+          { width: config.iconSize, height: config.iconSize },
+        ]}
+      >
         <Icon
           type="edit"
-          size={12}
+          size={config.iconSize}
           color={value ? colors.icon.bold : colors.icon.subtle}
         />
       </View>
@@ -86,7 +115,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacer['8'],
-    padding: spacer['12'],
     borderRadius: borderRadius.round,
     borderWidth: 0.5,
     overflow: 'hidden',
@@ -94,16 +122,13 @@ const styles = StyleSheet.create({
 
   input: {
     flex: 1,
-    ...textStyles.body03Light,
     color: colors.text.bold,
     padding: 0,
     margin: 0,
-    outlineStyle: 'none' as const,
+    ...({ outlineStyle: 'none' } as any),
   },
 
   iconWrap: {
-    width: 12,
-    height: 12,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',

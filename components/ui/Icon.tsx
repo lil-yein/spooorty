@@ -65,7 +65,9 @@ export type IconType =
   | 'notification'
   | 'filter'
   | 'camera'
-  | 'info';
+  | 'info'
+  | 'mail'
+  | 'apple';
 
 export type IconVariant = 'filled' | 'outlined';
 
@@ -106,6 +108,8 @@ const FILLED_MAP: Record<IconType, string> = {
   'filter': 'tune',
   'camera': 'photo-camera',
   'info': 'info-outline',
+  'mail': 'mail-outline',
+  'apple': 'logo-apple', // special case — rendered via Ionicons
 };
 
 // ─── Outline overrides (only for icons with distinct outline glyphs) ──
@@ -145,11 +149,12 @@ export default function Icon({
   size = 24,
   color = colors.text.bold,
 }: IconProps) {
-  // Instagram is not in MaterialIcons — use Ionicons fallback
-  if (type === 'Instagram') {
+  // Instagram and Apple are not in MaterialIcons — use Ionicons fallback
+  if (type === 'Instagram' || type === 'apple') {
+    const ionName = type === 'Instagram' ? 'logo-instagram' : 'logo-apple';
     return (
       <Ionicons
-        name="logo-instagram"
+        name={ionName}
         size={size}
         color={color}
       />

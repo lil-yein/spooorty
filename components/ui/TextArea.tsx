@@ -81,7 +81,7 @@ export default function TextArea({
         onChangeText={onChangeText}
         multiline
         textAlignVertical="top"
-        showsVerticalScrollIndicator={false}
+        {...({ showsVerticalScrollIndicator: false } as any)}
         onFocus={(e) => {
           setFocused(true);
           rest.onFocus?.(e);
@@ -126,7 +126,7 @@ const styles = StyleSheet.create({
     margin: 0,
     height: '100%' as unknown as number,
     textAlignVertical: 'top',
-    outlineStyle: 'none' as const,
+    ...({ outlineStyle: 'none' } as any),
   },
 
   iconWrap: {

@@ -16,8 +16,8 @@ import CreateEventScreen from '../screens/CreateEventScreen';
 
 export type CreateStackParamList = {
   CreateHome: undefined;
-  CreateClub: undefined;
-  CreateEvent: { associatedClubId?: string } | undefined;
+  CreateClub: { editClubId?: string } | undefined;
+  CreateEvent: { associatedClubId?: string; editEventId?: string } | undefined;
 };
 
 const Stack = createNativeStackNavigator<CreateStackParamList>();

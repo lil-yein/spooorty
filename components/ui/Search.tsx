@@ -106,7 +106,7 @@ const styles = StyleSheet.create({
     height: textStyles.body03Light.lineHeight,
     padding: 0,
     margin: 0,
-    outlineStyle: 'none' as const,
+    ...({ outlineStyle: 'none' } as any),
   },
 
   iconWrap: {

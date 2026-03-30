@@ -7,23 +7,24 @@
  *   Profile hero: Avatar Xl, name, handle
  *   Friend request action (send / pending / friends)
  *   Club section: CardLg list + "See All"
- *   Mutual Friends section: MembersItem list with descriptions
+ *   Mutual Friends section: MembersItem list
+ *
+ * Data: fetches user profile, their clubs, friendship status,
+ *       and mutual friends from Supabase.
  */
 
 import React, { useState, useMemo, useCallback } from 'react';
-import { View, Text, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, ActivityIndicator, StyleSheet } from 'react-native';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import { colors } from '../lib/tokens/colors';
 import { spacer } from '../lib/tokens/spacing';
 import { textStyles } from '../lib/tokens/textStyles';
 import { Avatar, Button, ClubCardLg, Divider, Icon, MembersItem } from '../components/ui';
-import {
-  USERS,
-  INITIAL_FRIENDSHIP_STATUS,
-  getUserClubs,
-  getMutualFriends,
-  type FriendshipStatus,
-} from '../lib/data/mockData';
+import { useUserProfile } from '../lib/hooks/useProfile';
+import { useFriendshipStatus, useMutualFriends } from '../lib/hooks/useFriendships';
+import { useSupabaseQuery } from '../lib/hooks/useSupabaseQuery';
+import { getUserClubs } from '../lib/api/clubs';
+import { clubToCardProps } from '../lib/api/transforms';
 import type { ProfileStackParamList } from '../navigation/ProfileStack';
 
 // ─── Component ──────────────────────────────────────────
@@ -33,23 +34,31 @@ export default function OtherUserProfileScreen() {
   const route = useRoute<RouteProp<ProfileStackParamList, 'OtherUserProfile'>>();
   const { userId } = route.params;
 
-  const user = useMemo(() => USERS.find((u) => u.id === userId), [userId]);
-  const clubs = useMemo(() => getUserClubs(userId), [userId]);
-  const mutualFriends = useMemo(() => getMutualFriends(userId), [userId]);
+  // Fetch real data
+  const { data: userProfile, loading: profileLoading } = useUserProfile(userId);
+  const { data: dbClubs, loading: clubsLoading } = useSupabaseQuery(
+    () => getUserClubs(userId),
+    [userId],
+  );
+  const { data: friendship, sendRequest, accept, decline, remove } = useFriendshipStatus(userId);
+  const { data: mutualFriends, loading: mutualsLoading } = useMutualFriends(userId);
 
-  const initialStatus = INITIAL_FRIENDSHIP_STATUS[userId] ?? 'none';
-  const [friendshipStatus, setFriendshipStatus] =
-    useState<FriendshipStatus>(initialStatus);
   const [cardStates, setCardStates] = useState<Record<string, 'Pending' | 'Joined'>>({});
   const [showAllClubs, setShowAllClubs] = useState(false);
 
-  const handleSendRequest = useCallback(() => {
-    setFriendshipStatus('pending');
-  }, []);
+  // Transform clubs
+  const clubs = useMemo(
+    () => (dbClubs ?? []).map((club, i) => clubToCardProps(club, i)),
+    [dbClubs],
+  );
 
-  const handleCancelRequest = useCallback(() => {
-    setFriendshipStatus('none');
-  }, []);
+  // Derive friendship status
+  const friendshipStatus = useMemo(() => {
+    if (!friendship) return 'none';
+    if (friendship.status === 'accepted') return 'friends';
+    if (friendship.status === 'pending') return 'pending';
+    return 'none';
+  }, [friendship]);
 
   const handleCtaPress = useCallback((id: string, adminApproval?: boolean) => {
     setCardStates((prev) => {
@@ -71,7 +80,15 @@ export default function OtherUserProfileScreen() {
     [navigation],
   );
 
-  if (!user) {
+  if (profileLoading) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color={colors.text.subtle} />
+      </View>
+    );
+  }
+
+  if (!userProfile) {
     return (
       <View style={styles.container}>
         <Text style={styles.notFound}>User not found</Text>
@@ -98,11 +115,13 @@ export default function OtherUserProfileScreen() {
         {/* ── Profile Hero ───────────────────────────────── */}
         <View style={styles.profileHero}>
           <Avatar type="Image" size="Xl" />
-          <Text style={styles.profileName}>{user.name}</Text>
-          <View style={styles.handleRow}>
-            <Icon type="Instagram" size={16} color={colors.text.subtle} />
-            <Text style={styles.profileHandle}>{user.handle}</Text>
-          </View>
+          <Text style={styles.profileName}>{userProfile.display_name}</Text>
+          {userProfile.social_handle ? (
+            <View style={styles.handleRow}>
+              <Icon type="Instagram" size={16} color={colors.text.subtle} />
+              <Text style={styles.profileHandle}>{userProfile.social_handle}</Text>
+            </View>
+          ) : null}
         </View>
 
         {/* ── Friend Request Action ──────────────────────── */}
@@ -116,7 +135,7 @@ export default function OtherUserProfileScreen() {
               trailingIcon={({ color, size }) => (
                 <Icon type="add friend" size={size} color={color} />
               )}
-              onPress={handleSendRequest}
+              onPress={sendRequest}
             />
           )}
           {friendshipStatus === 'pending' && (
@@ -129,7 +148,18 @@ export default function OtherUserProfileScreen() {
               trailingIcon={({ size }) => (
                 <Icon type="clock" size={size} color={colors.icon.subtle} />
               )}
-              onPress={handleCancelRequest}
+              onPress={remove}
+            />
+          )}
+          {friendshipStatus === 'friends' && (
+            <Button
+              emphasis="Subtle"
+              content="Text"
+              size="Md"
+              label="Friends"
+              trailingIcon={({ size }) => (
+                <Icon type="check" size={size} color={colors.icon.subtle} />
+              )}
             />
           )}
         </View>
@@ -137,31 +167,35 @@ export default function OtherUserProfileScreen() {
         {/* ── Club Section ───────────────────────────────── */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Club</Text>
-          <View style={styles.cardsList}>
-            {(showAllClubs ? clubs : clubs.slice(0, 2)).map((club) => (
-              <ClubCardLg
-                key={club.id}
-                name={club.name}
-                members={club.members}
-                sports={club.sports}
-                location={club.location}
-                level={club.level}
-                avatar={
-                  <Avatar type="Image" size="Lg" showCount count={3} />
-                }
-                mutualHighlight={club.mutualHighlight}
-                mutualBody={club.mutualBody}
-                price={club.price}
-                state={cardStates[club.id] ?? 'Enabled'}
-                ctaLabel={club.ctaLabel}
-                ctaColor={club.ctaColor}
-                ctaTextColor={club.ctaTextColor}
-                adminApproval={club.adminApproval}
-                onCtaPress={() => handleCtaPress(club.id, club.adminApproval)}
-                onPress={() => navigation.navigate('Club', { clubId: club.id })}
-              />
-            ))}
-          </View>
+          {clubsLoading ? (
+            <ActivityIndicator size="small" color={colors.text.subtle} />
+          ) : clubs.length > 0 ? (
+            <View style={styles.cardsList}>
+              {(showAllClubs ? clubs : clubs.slice(0, 2)).map((club) => (
+                <ClubCardLg
+                  key={club.id}
+                  name={club.name}
+                  members={club.members}
+                  sports={club.sports}
+                  location={club.location}
+                  level={club.level}
+                  avatar={
+                    <Avatar type="Image" size="Lg" showCount count={3} />
+                  }
+                  price={club.price}
+                  state={cardStates[club.id] ?? 'Enabled'}
+                  ctaLabel={club.ctaLabel}
+                  ctaColor={club.ctaColor}
+                  ctaTextColor={club.ctaTextColor}
+                  adminApproval={club.adminApproval}
+                  onCtaPress={() => handleCtaPress(club.id, club.adminApproval)}
+                  onPress={() => navigation.navigate('Club', { clubId: club.id })}
+                />
+              ))}
+            </View>
+          ) : (
+            <Text style={styles.emptyText}>No clubs yet</Text>
+          )}
           {clubs.length > 2 && (
             <Button
               emphasis="Subtle"
@@ -174,7 +208,7 @@ export default function OtherUserProfileScreen() {
         </View>
 
         {/* ── Mutual Friends Section ─────────────────────── */}
-        {mutualFriends.length > 0 && (
+        {(mutualFriends ?? []).length > 0 && (
           <>
             <View style={styles.dividerFullWidth}>
               <Divider emphasis="Subtle" />
@@ -182,13 +216,12 @@ export default function OtherUserProfileScreen() {
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Mutual Friends</Text>
               <View style={styles.membersList}>
-                {mutualFriends.map((mf) => (
+                {(mutualFriends ?? []).map((mf) => (
                   <MembersItem
-                    key={mf.userId}
+                    key={mf.id}
                     avatar={<Avatar type="Image" size="Lg" />}
-                    name={mf.user.name}
-                    description={mf.description}
-                    onPress={() => navigateToUser(mf.userId)}
+                    name={mf.display_name}
+                    onPress={() => navigateToUser(mf.id)}
                   />
                 ))}
               </View>
@@ -260,20 +293,9 @@ const styles = StyleSheet.create({
     gap: spacer['24'],
   },
 
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-
   sectionTitle: {
     ...textStyles.title01Medium,
     color: colors.text.bold,
-  },
-
-  seeAll: {
-    ...textStyles.body03Light,
-    color: colors.text.subtle,
   },
 
   cardsList: {
@@ -286,6 +308,13 @@ const styles = StyleSheet.create({
 
   membersList: {
     gap: spacer['12'],
+  },
+
+  emptyText: {
+    ...textStyles.body03Light,
+    color: colors.text.subtle,
+    textAlign: 'center',
+    paddingVertical: spacer['12'],
   },
 
   notFound: {

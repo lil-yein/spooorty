@@ -12,7 +12,9 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": false
+      "supportsTablet": false,
+      "bundleIdentifier": "com.spooorty.app",
+      "usesAppleSignIn": true
     },
     "android": {
       "adaptiveIcon": {
@@ -27,6 +29,7 @@
     },
     "plugins": [
       "expo-font",
+      "expo-apple-authentication",
       [
         "expo-location",
         {

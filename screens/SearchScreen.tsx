@@ -5,16 +5,22 @@
  *   Header: Back button + Search input (flex 1) + Filter button
  *   Tags row: Clubs / Events
  *   Cards list: filtered CardLg results
+ *
+ * Data: searches clubs & events from Supabase by name.
  */
 
 import React, { useState, useMemo, useCallback } from 'react';
-import { View, ScrollView, StyleSheet } from 'react-native';
+import { View, ScrollView, ActivityIndicator, Text, StyleSheet } from 'react-native';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import { colors } from '../lib/tokens/colors';
 import { spacer } from '../lib/tokens/spacing';
+import { textStyles } from '../lib/tokens/textStyles';
 import { Avatar, Button, ClubCardLg, EventCardLg, Icon, Search } from '../components/ui';
 import Tag from '../components/ui/Tag';
-import { CLUBS, EVENTS, DEFAULT_FILTERS, type SearchFilters } from '../lib/data/mockData';
+import { useClubs } from '../lib/hooks/useClubs';
+import { useEvents } from '../lib/hooks/useEvents';
+import { clubToCardProps, eventToCardProps } from '../lib/api/transforms';
+import { DEFAULT_FILTERS, type SearchFilters } from '../lib/data/mockData';
 import type { DiscoverStackParamList } from '../navigation/DiscoverStack';
 
 // ─── Tag labels ─────────────────────────────────────────
@@ -32,18 +38,28 @@ export default function SearchScreen() {
 
   const filters: SearchFilters = route.params?.filters ?? DEFAULT_FILTERS;
 
-  // Filter cards by query text (name match)
+  // Fetch all data from Supabase
+  const { data: dbClubs, loading: clubsLoading } = useClubs();
+  const { data: dbEvents, loading: eventsLoading } = useEvents();
+
+  // Filter by query text (client-side for now)
   const filteredClubs = useMemo(() => {
-    if (query.length === 0) return [];
+    if (!query.trim() || !dbClubs) return [];
     const q = query.toLowerCase();
-    return CLUBS.filter((c) => c.name.toLowerCase().includes(q));
-  }, [query]);
+    return dbClubs
+      .filter((c) => c.name.toLowerCase().includes(q))
+      .map((c, i) => clubToCardProps(c, i));
+  }, [query, dbClubs]);
 
   const filteredEvents = useMemo(() => {
-    if (query.length === 0) return [];
+    if (!query.trim() || !dbEvents) return [];
     const q = query.toLowerCase();
-    return EVENTS.filter((c) => c.name.toLowerCase().includes(q));
-  }, [query]);
+    return dbEvents
+      .filter((e) => e.name.toLowerCase().includes(q))
+      .map((e, i) => eventToCardProps(e, i));
+  }, [query, dbEvents]);
+
+  const loading = selectedTag === 0 ? clubsLoading : eventsLoading;
 
   const handleCtaPress = useCallback((id: string, adminApproval?: boolean) => {
     setCardStates((prev) => {
@@ -112,52 +128,62 @@ export default function SearchScreen() {
 
         {/* ── Cards List ─────────────────────────────────── */}
         <View style={styles.cardsSection}>
-          {selectedTag === 0
-            ? filteredClubs.map((card) => (
-                <ClubCardLg
-                  key={card.id}
-                  name={card.name}
-                  members={card.members}
-                  sports={card.sports}
-                  location={card.location}
-                  level={card.level}
-                  avatar={
-                    <Avatar type="Image" size="Lg" showCount count={3} />
-                  }
-                  mutualHighlight={card.mutualHighlight}
-                  mutualBody={card.mutualBody}
-                  price={card.price}
-                  state={cardStates[card.id] ?? 'Enabled'}
-                  ctaLabel={card.ctaLabel}
-                  ctaColor={card.ctaColor}
-                  ctaTextColor={card.ctaTextColor}
-                  adminApproval={card.adminApproval}
-                  onCtaPress={() => handleCtaPress(card.id, card.adminApproval)}
-                  onPress={() => navigation.navigate('Club', { clubId: card.id })}
-                />
-              ))
-            : filteredEvents.map((card) => (
-                <EventCardLg
-                  key={card.id}
-                  name={card.name}
-                  dateTime={card.dateTime}
-                  location={card.location}
-                  level={card.level}
-                  avatar={
-                    <Avatar type="Image" size="Lg" showCount count={3} />
-                  }
-                  mutualHighlight={card.mutualHighlight}
-                  mutualBody={card.mutualBody}
-                  price={card.price}
-                  state={cardStates[card.id] ?? 'Enabled'}
-                  ctaLabel={card.ctaLabel}
-                  ctaColor={card.ctaColor}
-                  ctaTextColor={card.ctaTextColor}
-                  adminApproval={card.adminApproval}
-                  onCtaPress={() => handleCtaPress(card.id, card.adminApproval)}
-                  onPress={() => navigation.navigate('Event', { eventId: card.id })}
-                />
-              ))}
+          {loading ? (
+            <ActivityIndicator
+              size="large"
+              color={colors.text.subtle}
+              style={{ marginTop: spacer['24'] }}
+            />
+          ) : selectedTag === 0
+            ? filteredClubs.length > 0
+              ? filteredClubs.map((card) => (
+                  <ClubCardLg
+                    key={card.id}
+                    name={card.name}
+                    members={card.members}
+                    sports={card.sports}
+                    location={card.location}
+                    level={card.level}
+                    avatar={
+                      <Avatar type="Image" size="Lg" showCount count={3} />
+                    }
+                    price={card.price}
+                    state={cardStates[card.id] ?? 'Enabled'}
+                    ctaLabel={card.ctaLabel}
+                    ctaColor={card.ctaColor}
+                    ctaTextColor={card.ctaTextColor}
+                    adminApproval={card.adminApproval}
+                    onCtaPress={() => handleCtaPress(card.id, card.adminApproval)}
+                    onPress={() => navigation.navigate('Club', { clubId: card.id })}
+                  />
+                ))
+              : query.trim() ? (
+                  <Text style={styles.emptyText}>No clubs found</Text>
+                ) : null
+            : filteredEvents.length > 0
+              ? filteredEvents.map((card) => (
+                  <EventCardLg
+                    key={card.id}
+                    name={card.name}
+                    dateTime={card.dateTime}
+                    location={card.location}
+                    level={card.level}
+                    avatar={
+                      <Avatar type="Image" size="Lg" showCount count={3} />
+                    }
+                    price={card.price}
+                    state={cardStates[card.id] ?? 'Enabled'}
+                    ctaLabel={card.ctaLabel}
+                    ctaColor={card.ctaColor}
+                    ctaTextColor={card.ctaTextColor}
+                    adminApproval={card.adminApproval}
+                    onCtaPress={() => handleCtaPress(card.id, card.adminApproval)}
+                    onPress={() => navigation.navigate('Event', { eventId: card.id })}
+                  />
+                ))
+              : query.trim() ? (
+                  <Text style={styles.emptyText}>No events found</Text>
+                ) : null}
         </View>
       </ScrollView>
     </View>
@@ -203,5 +229,12 @@ const styles = StyleSheet.create({
     marginTop: spacer['12'],
     paddingHorizontal: spacer['24'],
     gap: spacer['12'],
+  },
+
+  emptyText: {
+    ...textStyles.body03Light,
+    color: colors.text.subtle,
+    textAlign: 'center',
+    paddingVertical: spacer['24'],
   },
 });

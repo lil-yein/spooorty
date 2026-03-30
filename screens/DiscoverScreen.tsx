@@ -6,17 +6,21 @@
  *   Tags row: "Clubs" / "Events" filter tags (switches content below)
  *   Cards list: CardLg items — different data per tag
  *   BottomNav: handled by TabNavigator
+ *
+ * Data: fetches clubs & events from Supabase, falls back to mock data.
  */
 
-import React, { useState } from 'react';
-import { View, Text, ScrollView, StyleSheet } from 'react-native';
+import React, { useState, useMemo } from 'react';
+import { View, Text, ScrollView, ActivityIndicator, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { colors } from '../lib/tokens/colors';
 import { spacer } from '../lib/tokens/spacing';
 import { textStyles } from '../lib/tokens/textStyles';
 import { Avatar, Button, ClubCardLg, EventCardLg, Icon } from '../components/ui';
 import Tag from '../components/ui/Tag';
-import { CLUBS, EVENTS } from '../lib/data/mockData';
+import { useClubs } from '../lib/hooks/useClubs';
+import { useEvents } from '../lib/hooks/useEvents';
+import { clubToCardProps, eventToCardProps } from '../lib/api/transforms';
 
 // ─── Tag labels ─────────────────────────────────────────
 const TAGS = ['Clubs', 'Events'];
@@ -26,8 +30,21 @@ export default function DiscoverScreen() {
   const [selectedTag, setSelectedTag] = useState(0);
   const [cardStates, setCardStates] = useState<Record<string, 'Pending' | 'Joined'>>({});
 
-  const clubs = CLUBS;
-  const events = EVENTS;
+  // Fetch real data from Supabase
+  const { data: dbClubs, loading: clubsLoading } = useClubs();
+  const { data: dbEvents, loading: eventsLoading } = useEvents();
+
+  // Transform DB rows into card props
+  const clubs = useMemo(
+    () => (dbClubs ?? []).map((club, i) => clubToCardProps(club, i)),
+    [dbClubs],
+  );
+  const events = useMemo(
+    () => (dbEvents ?? []).map((event, i) => eventToCardProps(event, i)),
+    [dbEvents],
+  );
+
+  const loading = selectedTag === 0 ? clubsLoading : eventsLoading;
 
   const handleCtaPress = (id: string, adminApproval?: boolean) => {
     setCardStates((prev) => {
@@ -90,7 +107,13 @@ export default function DiscoverScreen() {
 
         {/* ── Cards List ─────────────────────────────────── */}
         <View style={styles.cardsSection}>
-          {selectedTag === 0
+          {loading ? (
+            <ActivityIndicator
+              size="large"
+              color={colors.text.subtle}
+              style={styles.loader}
+            />
+          ) : selectedTag === 0
             ? clubs.map((card) => (
                 <ClubCardLg
                   key={card.id}
@@ -102,8 +125,6 @@ export default function DiscoverScreen() {
                   avatar={
                     <Avatar type="Image" size="Lg" showCount count={3} />
                   }
-                  mutualHighlight={card.mutualHighlight}
-                  mutualBody={card.mutualBody}
                   price={card.price}
                   state={cardStates[card.id] ?? 'Enabled'}
                   ctaLabel={card.ctaLabel}
@@ -124,8 +145,6 @@ export default function DiscoverScreen() {
                   avatar={
                     <Avatar type="Image" size="Lg" showCount count={3} />
                   }
-                  mutualHighlight={card.mutualHighlight}
-                  mutualBody={card.mutualBody}
                   price={card.price}
                   state={cardStates[card.id] ?? 'Enabled'}
                   ctaLabel={card.ctaLabel}
@@ -188,5 +207,9 @@ const styles = StyleSheet.create({
     marginTop: spacer['12'],
     paddingHorizontal: spacer['24'],
     gap: spacer['12'],
+  },
+
+  loader: {
+    marginTop: spacer['48'],
   },
 });

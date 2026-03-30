@@ -12,7 +12,7 @@
  *   Bottom action: "Create Event" button + error state
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -26,7 +26,8 @@ import {
   Platform,
   type ViewStyle,
 } from 'react-native';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
+import type { CreateStackParamList } from '../navigation/CreateStack';
 import { colors } from '../lib/tokens/colors';
 import { spacer, borderRadius } from '../lib/tokens/spacing';
 import { textStyles } from '../lib/tokens/textStyles';
@@ -50,17 +51,17 @@ import {
   Tag,
 } from '../components/ui';
 import type { SelectedLocation } from '../components/ui/LocationSearchModal';
+import { useAuth } from '../lib/AuthContext';
+import { createEvent, updateEvent, getEventById } from '../lib/api/events';
+import { useMyClubs } from '../lib/hooks/useClubs';
+import { uploadCoverFromUri } from '../lib/api/storage';
+import { skillLevelToNumber } from '../lib/api/transforms';
+import type { SkillLevel, VibeTag } from '../lib/database/types';
 import {
-  CURRENT_USER,
-  EVENTS,
-  CLUBS,
-  CLUB_DETAILS,
-  USERS,
-  getFriends,
-  getFriendSuggestions,
-  FRIEND_DESCRIPTIONS,
-  SUGGESTION_DESCRIPTIONS,
-} from '../lib/data/mockData';
+  validateEventForm,
+  hasEventErrors,
+  type EventFormErrors,
+} from '../lib/validation';
 
 const SCREEN_HEIGHT = Dimensions.get('window').height;
 
@@ -80,10 +81,23 @@ const DAY_LABELS_FULL = [
 
 // ─── Component ──────────────────────────────────────────
 
+const SKILL_LEVEL_MAP: Record<number, SkillLevel> = {
+  1: 'beginner',
+  2: 'beg_int',
+  3: 'intermediate',
+  4: 'int_adv',
+  5: 'advanced',
+};
+
 export default function CreateEventScreen() {
   const navigation = useNavigation<any>();
-  const route = useRoute<any>();
+  const route = useRoute<RouteProp<CreateStackParamList, 'CreateEvent'>>();
   const initialClubId = route.params?.associatedClubId ?? null;
+  const editEventId = route.params?.editEventId;
+  const isEditMode = !!editEventId;
+  const { user } = useAuth();
+  const [creating, setCreating] = useState(false);
+  const [editLoaded, setEditLoaded] = useState(false);
 
   // ── Form state ──
   const [coverImageUri, setCoverImageUri] = useState<string | null>(null);
@@ -159,19 +173,86 @@ export default function CreateEventScreen() {
   const [selectedClubId, setSelectedClubId] = useState<string | null>(initialClubId);
 
   // Validation
-  const [showError, setShowError] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<EventFormErrors>({
+    name: null,
+    date: null,
+    time: null,
+    fee: null,
+    capacity: null,
+    description: null,
+  });
+  const [submitted, setSubmitted] = useState(false);
+
+  // ── Pre-populate form for edit mode ──
+  useEffect(() => {
+    if (!isEditMode || editLoaded) return;
+    (async () => {
+      try {
+        const event = await getEventById(editEventId!);
+        if (!event) return;
+        setCoverImageUri(event.cover_photo_url ?? null);
+        setEventName(event.name);
+        setIsRecurring(event.is_recurring ?? false);
+        if (event.event_date) {
+          const d = new Date(event.event_date);
+          setDateValue(`${d.getMonth() + 1}/${d.getDate()}`);
+        }
+        if (event.start_time) {
+          // Parse 24h "HH:MM" → 12h hour, minute, amPm
+          const [hh, mm] = event.start_time.split(':').map(Number);
+          const isPm = hh >= 12;
+          const h12 = hh === 0 ? 12 : hh > 12 ? hh - 12 : hh;
+          setHourValue(String(h12));
+          setMinuteValue(String(mm).padStart(2, '0'));
+          setAmPm(isPm ? 1 : 0);
+        }
+        if (event.end_time) {
+          const [hh, mm] = event.end_time.split(':').map(Number);
+          const isPm = hh >= 12;
+          const h12 = hh === 0 ? 12 : hh > 12 ? hh - 12 : hh;
+          setEndHourValue(String(h12));
+          setEndMinuteValue(String(mm).padStart(2, '0'));
+          setEndAmPm(isPm ? 1 : 0);
+          setAddEndTime(true);
+        }
+        if (event.recurrence_rule) {
+          const dayNames = event.recurrence_rule.split(',');
+          const indices = dayNames
+            .map((name: string) => DAY_LABELS_FULL.findIndex((d) => d.toLowerCase() === name.trim()))
+            .filter((i: number) => i >= 0);
+          setSelectedDays(indices);
+        }
+        if (event.location_name) {
+          setSelectedLocation({
+            placeId: '',
+            name: event.location_name,
+            address: event.location_name,
+            latitude: event.location_lat ?? 0,
+            longitude: event.location_lng ?? 0,
+          });
+        }
+        if (event.club_id) setSelectedClubId(event.club_id);
+        setFeeValue(event.fee_amount ? String(event.fee_amount) : '0');
+        setLevelIndicator(skillLevelToNumber(event.skill_level ?? 'beginner'));
+        setDescription(event.description ?? '');
+        if (event.vibe) {
+          setSelectedVibe(event.vibe.charAt(0).toUpperCase() + event.vibe.slice(1));
+        }
+        setAdminApproval(event.requires_approval ?? true);
+        setCapacity(event.capacity ? String(event.capacity) : '');
+        setEditLoaded(true);
+      } catch (err) {
+        console.error('Failed to load event for editing:', err);
+      }
+    })();
+  }, [isEditMode, editEventId, editLoaded]);
 
   // ── Helpers ──
 
-  const allUsers = [CURRENT_USER, ...USERS];
+  const { data: myClubs } = useMyClubs();
+  const myAdminClubs = myClubs ?? [];
 
-  const selectedClub = CLUBS.find((c) => c.id === selectedClubId);
-
-  // Only show clubs where the current user is an admin
-  const myAdminClubs = CLUBS.filter((c) => {
-    const detail = CLUB_DETAILS[c.id];
-    return detail?.adminIds.includes(CURRENT_USER.id);
-  });
+  const selectedClub = myAdminClubs.find((c) => c.id === selectedClubId);
 
   const filteredClubs = clubSearch.trim()
     ? myAdminClubs.filter((c) =>
@@ -179,27 +260,25 @@ export default function CreateEventScreen() {
       )
     : myAdminClubs;
 
-  const friends = getFriends();
-  const otherMembers = getFriendSuggestions();
+  const friends: any[] = [];
+  const otherMembers: any[] = [];
+  const filteredFriends = friends;
+  const filteredOtherMembers = otherMembers;
 
-  const filteredFriends = adminSearch.trim()
-    ? friends.filter((u) =>
-        u.name.toLowerCase().includes(adminSearch.toLowerCase()),
-      )
-    : friends;
+  // All available users for admin selection
+  const allUsers: { id: string; name: string; handle?: string }[] = useMemo(() => {
+    const list: { id: string; name: string; handle?: string }[] = [];
+    if (user) list.push({ id: user.id, name: user.user_metadata?.display_name ?? 'You' });
+    list.push(...friends, ...otherMembers);
+    return list;
+  }, [user, friends, otherMembers]);
 
-  const filteredOtherMembers = adminSearch.trim()
-    ? otherMembers.filter((u) =>
-        u.name.toLowerCase().includes(adminSearch.toLowerCase()),
-      )
-    : otherMembers;
+  const selectedAdminUsers = Array.from(selectedAdminIds)
+    .map((id: string) => allUsers.find((u: { id: string }) => u.id === id))
+    .filter(Boolean) as typeof allUsers;
 
-  const selectedAdminNames = Array.from(selectedAdminIds)
-    .map((id) => {
-      const user = allUsers.find((u) => u.id === id);
-      return user?.name ?? '';
-    })
-    .filter(Boolean)
+  const selectedAdminNames = selectedAdminUsers
+    .map((u: { name: string }) => u.name)
     .join(', ');
 
   const toggleAdmin = (userId: string) => {
@@ -264,59 +343,124 @@ export default function CreateEventScreen() {
     setCtaColor(`#${f(0)}${f(8)}${f(4)}`);
   }, []);
 
-  const handleCreate = useCallback(() => {
-    // Required: Name, Date/Days, Time, Fee
-    const hasDate = isRecurring ? selectedDays.length > 0 : dateValue.trim() !== '';
-    const hasTime = isRecurring
-      ? selectedDays.every((d) => {
-          const t = getDayTime(d);
-          return t.hour.trim() !== '' && t.minute.trim() !== '';
-        })
-      : hourValue.trim() !== '' && minuteValue.trim() !== '';
+  const handleSubmit = useCallback(async () => {
+    setSubmitted(true);
 
-    if (!eventName.trim() || !hasDate || !hasTime || !feeValue.trim()) {
-      setShowError(true);
-      return;
-    }
-    setShowError(false);
-
-    // Build time string
-    let dateTimeStr: string;
-    if (isRecurring) {
-      const dayNames = selectedDays.map((d) => DAY_LABELS_SHORT[d]).join(', ');
-      const firstDay = selectedDays[0];
-      const t = getDayTime(firstDay);
-      dateTimeStr = `Every ${dayNames} ${t.hour}:${t.minute} ${t.amPm === 0 ? 'AM' : 'PM'}`;
-    } else {
-      const timeStr = `${hourValue}:${minuteValue} ${amPm === 0 ? 'AM' : 'PM'}`;
-      dateTimeStr = `${dateValue} ${timeStr}`;
+    // Build dayTimes map for recurring validation
+    const dayTimesMap: Record<number, { hour: string; minute: string }> = {};
+    for (const d of selectedDays) {
+      const t = getDayTime(d);
+      dayTimesMap[d] = { hour: t.hour, minute: t.minute };
     }
 
-    const locationName = selectedLocation?.name ?? 'TBD';
-
-    // Create new club and navigate
-    const newClub = {
-      id: `club-new-${Date.now()}`,
-      name: eventName.toUpperCase(),
-      dateTime: dateTimeStr,
-      location: locationName,
-      level: levelIndicator as 1 | 2 | 3 | 4 | 5,
-      mutualHighlight: `${CURRENT_USER.name.split(' ')[0]}`,
-      mutualBody: 'is the admin',
-      price: `$${feeValue}`,
-      ctaLabel: 'Join Event',
-      ctaColor: ctaColor,
-      ctaTextColor: colors.text.onhighlight,
-    };
-
-    // Add to EVENTS array (in-memory)
-    EVENTS.push(newClub);
-
-    // Navigate to the new event page
-    navigation.navigate('Discover', {
-      screen: 'Event',
-      params: { eventId: newClub.id },
+    const errors = validateEventForm({
+      name: eventName,
+      isRecurring,
+      dateValue,
+      selectedDays,
+      hourValue,
+      minuteValue,
+      dayTimes: dayTimesMap,
+      feeValue,
+      capacity,
+      description,
     });
+    setFieldErrors(errors);
+    if (hasEventErrors(errors)) return;
+    if (!user) return;
+    setCreating(true);
+
+    try {
+      // Build start_time in 24h format
+      let startTime: string;
+      if (isRecurring) {
+        const firstDay = selectedDays[0];
+        const t = getDayTime(firstDay);
+        const h = parseInt(t.hour, 10);
+        const h24 = t.amPm === 1 ? (h === 12 ? 12 : h + 12) : (h === 12 ? 0 : h);
+        startTime = `${String(h24).padStart(2, '0')}:${t.minute.padStart(2, '0')}`;
+      } else {
+        const h = parseInt(hourValue, 10);
+        const h24 = amPm === 1 ? (h === 12 ? 12 : h + 12) : (h === 12 ? 0 : h);
+        startTime = `${String(h24).padStart(2, '0')}:${minuteValue.padStart(2, '0')}`;
+      }
+
+      // Build event_date (YYYY-MM-DD) — for one-time, parse dateValue; for recurring use today
+      let eventDate: string;
+      if (!isRecurring && dateValue.trim()) {
+        // Expect dateValue like "04/05" or "2026-04-05"
+        const parts = dateValue.split('/');
+        if (parts.length >= 2) {
+          const now = new Date();
+          const m = parts[0].padStart(2, '0');
+          const d = parts[1].padStart(2, '0');
+          eventDate = `${now.getFullYear()}-${m}-${d}`;
+        } else {
+          eventDate = dateValue;
+        }
+      } else {
+        eventDate = new Date().toISOString().split('T')[0];
+      }
+
+      const formData = {
+        name: eventName.trim(),
+        club_id: selectedClubId ?? null,
+        event_date: eventDate,
+        start_time: startTime,
+        sport: null as string | null,
+        description: description.trim() || null,
+        location_name: selectedLocation?.name ?? null,
+        location_lat: selectedLocation?.latitude ?? null,
+        location_lng: selectedLocation?.longitude ?? null,
+        skill_level: SKILL_LEVEL_MAP[levelIndicator] ?? ('beginner' as const),
+        fee_amount: parseFloat(feeValue) || 0,
+        fee_frequency: (parseFloat(feeValue) > 0 ? 'per_event' : 'free') as 'per_event' | 'free',
+        vibe: (selectedVibe.toLowerCase() as VibeTag) ?? null,
+        capacity: capacity ? parseInt(capacity, 10) : null,
+        requires_approval: adminApproval,
+        is_recurring: isRecurring,
+        recurrence_rule: isRecurring
+          ? selectedDays.map((d) => DAY_LABELS_FULL[d].toLowerCase()).join(',')
+          : null,
+      };
+
+      let eventId: string;
+
+      if (isEditMode && editEventId) {
+        // ── Update existing event ──
+        await updateEvent(editEventId, formData);
+        eventId = editEventId;
+      } else {
+        // ── Create new event ──
+        const newEvent = await createEvent({
+          ...formData,
+          created_by: user.id,
+        });
+        eventId = newEvent.id;
+      }
+
+      // Upload cover photo if changed
+      if (coverImageUri) {
+        try {
+          const coverUrl = await uploadCoverFromUri('event', eventId, coverImageUri);
+          if (coverUrl) {
+            await updateEvent(eventId, { cover_photo_url: coverUrl });
+          }
+        } catch (uploadErr) {
+          console.warn('Cover photo upload failed:', uploadErr);
+        }
+      }
+
+      navigation.navigate('Discover', {
+        screen: 'Event',
+        params: { eventId },
+      });
+    } catch (err) {
+      console.error(`Failed to ${isEditMode ? 'update' : 'create'} event:`, err);
+      setFieldErrors((prev) => ({ ...prev, name: 'Something went wrong. Please try again.' }));
+    } finally {
+      setCreating(false);
+    }
   }, [
     eventName,
     dateValue,
@@ -328,8 +472,16 @@ export default function CreateEventScreen() {
     selectedDays,
     dayTimes,
     selectedLocation,
+    selectedClubId,
     levelIndicator,
-    ctaColor,
+    selectedVibe,
+    description,
+    capacity,
+    adminApproval,
+    coverImageUri,
+    isEditMode,
+    editEventId,
+    user,
     navigation,
   ]);
 
@@ -349,7 +501,7 @@ export default function CreateEventScreen() {
           value={hVal}
           onChangeText={(text) => {
             onHChange(text);
-            setShowError(false);
+            if (submitted) setFieldErrors((prev) => ({ ...prev, time: null }));
           }}
           placeholder="HH"
           keyboardType="number-pad"
@@ -361,7 +513,7 @@ export default function CreateEventScreen() {
           value={mVal}
           onChangeText={(text) => {
             onMChange(text);
-            setShowError(false);
+            if (submitted) setFieldErrors((prev) => ({ ...prev, time: null }));
           }}
           placeholder="MM"
           keyboardType="number-pad"
@@ -391,10 +543,6 @@ export default function CreateEventScreen() {
       </Pressable>
     </View>
   );
-
-  const selectedAdminUsers = Array.from(selectedAdminIds)
-    .map((id) => allUsers.find((u) => u.id === id))
-    .filter(Boolean) as typeof allUsers;
 
   const renderAdminModal = () => (
     <Modal
@@ -451,19 +599,21 @@ export default function CreateEventScreen() {
 
           <ScrollView style={styles.modalScroll} showsVerticalScrollIndicator={false}>
             {/* You */}
+            {user && (
             <View style={styles.memberGroup}>
               <Text style={styles.memberGroupTitle}>You</Text>
               <MembersItem
                 avatar={<Avatar type="Image" size="Lg" />}
-                name={CURRENT_USER.name}
+                name={user.user_metadata?.display_name ?? 'You'}
                 description="That's you!"
-                showIcon={selectedAdminIds.has(CURRENT_USER.id)}
+                showIcon={selectedAdminIds.has(user.id)}
                 icon={({ size }) => (
                   <Icon type="check" color={colors.icon.bold} size={size} />
                 )}
-                onPress={() => toggleAdmin(CURRENT_USER.id)}
+                onPress={() => toggleAdmin(user.id)}
               />
             </View>
+            )}
 
             {/* Friends — no add-friend icon, show check if selected */}
             {filteredFriends.length > 0 && (
@@ -474,7 +624,7 @@ export default function CreateEventScreen() {
                     key={user.id}
                     avatar={<Avatar type="Image" size="Lg" />}
                     name={user.name}
-                    description={FRIEND_DESCRIPTIONS[user.id] ?? user.handle}
+                    description={user.handle ?? ''}
                     showIcon={selectedAdminIds.has(user.id)}
                     icon={({ size }) => (
                       <Icon type="check" color={colors.icon.bold} size={size} />
@@ -495,7 +645,7 @@ export default function CreateEventScreen() {
                     avatar={<Avatar type="Image" size="Lg" />}
                     name={user.name}
                     description={
-                      SUGGESTION_DESCRIPTIONS[user.id] ?? user.handle
+                      user.handle ?? ''
                     }
                     showIcon
                     icon={
@@ -583,7 +733,7 @@ export default function CreateEventScreen() {
                   <ClubItem
                     key={club.id}
                     name={club.name}
-                    subtitle={club.sports}
+                    subtitle={club.sport ?? ''}
                     selected={selectedClubId === club.id}
                     onPress={() => {
                       setSelectedClubId(club.id);
@@ -662,9 +812,13 @@ export default function CreateEventScreen() {
                   value={eventName}
                   onChangeText={(text) => {
                     setEventName(text);
-                    setShowError(false);
+                    if (submitted) setFieldErrors((prev) => ({ ...prev, name: null }));
                   }}
+                  maxLength={80}
                 />
+                {submitted && fieldErrors.name && (
+                  <Text style={styles.fieldError}>{fieldErrors.name}</Text>
+                )}
               </View>
 
               <Divider />
@@ -687,7 +841,7 @@ export default function CreateEventScreen() {
                       value={dateValue}
                       onChangeText={(text) => {
                         setDateValue(text);
-                        setShowError(false);
+                        if (submitted) setFieldErrors((prev) => ({ ...prev, date: null }));
                       }}
                       placeholder="01/18/2024"
                     />
@@ -816,10 +970,13 @@ export default function CreateEventScreen() {
                   value={feeValue}
                   onChangeText={(text) => {
                     setFeeValue(text);
-                    setShowError(false);
+                    if (submitted) setFieldErrors((prev) => ({ ...prev, fee: null }));
                   }}
                   keyboardType="number-pad"
                 />
+                {submitted && fieldErrors.fee && (
+                  <Text style={styles.fieldError}>{fieldErrors.fee}</Text>
+                )}
               </View>
             </View>
           </View>
@@ -970,12 +1127,19 @@ export default function CreateEventScreen() {
                       placeholder="00"
                       placeholderTextColor={colors.text.subtle}
                       value={capacity}
-                      onChangeText={setCapacity}
+                      onChangeText={(text) => {
+                        setCapacity(text);
+                        if (submitted) setFieldErrors((prev) => ({ ...prev, capacity: null }));
+                      }}
                       keyboardType="number-pad"
                     />
-                    <Text style={styles.helperText}>
-                      Set max number of attendees for your event
-                    </Text>
+                    {submitted && fieldErrors.capacity ? (
+                      <Text style={styles.fieldError}>{fieldErrors.capacity}</Text>
+                    ) : (
+                      <Text style={styles.helperText}>
+                        Set max number of attendees for your event
+                      </Text>
+                    )}
                   </View>
                 </>
               )}
@@ -986,11 +1150,11 @@ export default function CreateEventScreen() {
 
       {/* ── Bottom Action ──────────────────────────────────── */}
       <View style={styles.bottomActionWrap}>
-        {showError && (
+        {submitted && hasEventErrors(fieldErrors) && (
           <View style={styles.errorRow}>
             <Icon type="info" size={12} color={colors.icon.error} />
             <Text style={styles.errorText}>
-              Please fill out Name, Date, Time and Fee
+              {Object.values(fieldErrors).find((e) => e !== null)}
             </Text>
           </View>
         )}
@@ -998,11 +1162,11 @@ export default function CreateEventScreen() {
           <View style={styles.bottomActionRow}>
             <Button
               emphasis="Bold"
-              label="Create Event"
+              label={isEditMode ? 'Save Changes' : 'Create Event'}
               leadingIcon={({ color, size }) => (
-                <Icon type="add" size={size} color={color} />
+                <Icon type={isEditMode ? 'check' : 'add'} size={size} color={color} />
               )}
-              onPress={handleCreate}
+              onPress={handleSubmit}
             />
           </View>
         </View>
@@ -1311,6 +1475,12 @@ const styles = StyleSheet.create({
   errorText: {
     ...textStyles.body03Light,
     color: colors.text.error,
+  },
+
+  fieldError: {
+    ...textStyles.body03Light,
+    color: colors.text.error,
+    marginTop: spacer['4'],
   },
 
   bottomActionInner: {

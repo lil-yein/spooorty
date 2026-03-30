@@ -18,12 +18,15 @@ import * as SplashScreen from 'expo-splash-screen';
 
 SplashScreen.preventAutoHideAsync();
 
+import { AuthProvider, useAuth } from './lib/AuthContext';
 import TabNavigator from './navigation/TabNavigator';
+import LoginScreen from './screens/LoginScreen';
 import ComponentTestScreen from './screens/ComponentTestScreen';
 
 // ─── Root Stack ─────────────────────────────────────────────
 
 export type RootStackParamList = {
+  Login: undefined;
   Tabs: undefined;
   ComponentTest: undefined;
 };
@@ -67,6 +70,36 @@ const linking: LinkingOptions<RootStackParamList> = {
   },
 };
 
+// ⚠️ DEV ONLY: set to true to skip login and go straight to Tabs
+const DEV_SKIP_AUTH = false;
+
+function AppNavigator() {
+  const { session, loading } = useAuth();
+
+  if (loading && !DEV_SKIP_AUTH) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
+  const showApp = DEV_SKIP_AUTH || session;
+
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      {showApp ? (
+        <>
+          <Stack.Screen name="Tabs" component={TabNavigator} />
+          <Stack.Screen name="ComponentTest" component={ComponentTestScreen} />
+        </>
+      ) : (
+        <Stack.Screen name="Login" component={LoginScreen} />
+      )}
+    </Stack.Navigator>
+  );
+}
+
 export default function App() {
   const [fontsLoaded] = useFonts({
     'Nohemi-Light': require('./assets/fonts/Nohemi-Light.ttf'),
@@ -88,14 +121,13 @@ export default function App() {
   }
 
   return (
-    <SafeAreaProvider>
-      <NavigationContainer linking={Platform.OS === 'web' ? linking : undefined}>
-        <StatusBar style="dark" />
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="Tabs" component={TabNavigator} />
-          <Stack.Screen name="ComponentTest" component={ComponentTestScreen} />
-        </Stack.Navigator>
-      </NavigationContainer>
-    </SafeAreaProvider>
+    <AuthProvider>
+      <SafeAreaProvider>
+        <NavigationContainer linking={Platform.OS === 'web' ? linking : undefined}>
+          <StatusBar style="dark" />
+          <AppNavigator />
+        </NavigationContainer>
+      </SafeAreaProvider>
+    </AuthProvider>
   );
 }

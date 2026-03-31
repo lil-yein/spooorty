@@ -13,115 +13,10 @@ export type CardData = Omit<EventCardLgProps, 'avatar' | 'onCtaPress'> & { id: s
 export type ClubCardData = Omit<ClubCardLgProps, 'avatar' | 'onCtaPress'> & { id: string };
 
 // ─── Clubs ──────────────────────────────────────────────
-export const CLUBS: ClubCardData[] = [
-  {
-    id: 'club-1',
-    name: 'COOL PICKLEBALL CLUB',
-    members: '4 Members',
-
-    sports: 'Pickleball',
-    location: 'New York, NY',
-    level: 1,
-    mutualHighlight: 'Ling +3',
-    mutualBody: 'friends\nare members of this club',
-    price: '$20',
-    ctaLabel: 'Join Club',
-    ctaColor: '#FF834F',
-    ctaTextColor: colors.text.bold,
-  },
-  {
-    id: 'club-2',
-    name: 'FUN HOCKEY GAME',
-    members: '4 Members',
-
-    sports: 'Hockey',
-    location: 'Brooklyn, NY',
-    level: 3,
-    mutualHighlight: 'Alex +2',
-    mutualBody: 'friends\nare members of this club',
-    price: '$25',
-    ctaLabel: 'Join Club',
-    ctaColor: '#64437E',
-    ctaTextColor: colors.text.inverse,
-  },
-  {
-    id: 'club-3',
-    name: 'SATURDAY RUNNING CREW',
-    members: '3 Members',
-
-    sports: 'Running',
-    location: 'Central Park, NY',
-    level: 2,
-    mutualHighlight: 'Sam +5',
-    mutualBody: 'friends\nare members of this club',
-    price: '$15',
-    ctaLabel: 'Join Club',
-    ctaColor: '#FF834F',
-    ctaTextColor: colors.text.bold,
-  },
-  {
-    id: 'club-4',
-    name: 'EXCITING HANDBALL TEAM',
-    members: '3 Members',
-
-    sports: 'Handball',
-    location: 'Queens, NY',
-    level: 2,
-    mutualHighlight: 'Mia +1',
-    mutualBody: 'friends\nare members of this club',
-    price: '$18',
-    ctaLabel: 'Join Club',
-    ctaColor: '#66AAEF',
-    ctaTextColor: colors.text.bold,
-    adminApproval: true,
-  },
-  {
-    id: 'club-5',
-    name: 'WEEKEND TENNIS LEAGUE',
-    members: '4 Members',
-
-    sports: 'Tennis',
-    location: 'Flushing Meadows, NY',
-    level: 3,
-    mutualHighlight: 'Jake +4',
-    mutualBody: 'friends\nare members of this club',
-    price: '$22',
-    ctaLabel: 'Join Club',
-    ctaColor: '#82DC56',
-    ctaTextColor: colors.text.bold,
-  },
-];
+export const CLUBS: ClubCardData[] = [];
 
 // ─── Events ─────────────────────────────────────────────
-export const EVENTS: CardData[] = [
-  {
-    id: 'event-1',
-    name: 'SUNSET YOGA SESSION',
-    dateTime: '03/20 2025 5:30PM',
-    location: 'Prospect Park, NY',
-    level: 1,
-    mutualHighlight: 'Mia +4',
-    mutualBody: 'friends\nare attending this event',
-    price: '$10',
-    ctaLabel: 'Join Event',
-    ctaColor: '#64437E',
-    ctaTextColor: colors.text.inverse,
-  },
-  {
-    id: 'event-2',
-    name: 'BEACH VOLLEYBALL TOURNEY',
-    dateTime: '04/05 2025 10:00AM',
-    location: 'Coney Island, NY',
-    level: 4,
-    mutualHighlight: 'Jake +6',
-    mutualBody: 'friends\nare attending this event',
-    price: '$30',
-    ctaLabel: 'Join Event',
-    ctaColor: '#FF834F',
-    ctaTextColor: colors.text.bold,
-    adminApproval: true,
-  },
-];
+export const EVENTS: CardData[] = [];
 
 // ─── Sports / activity list (alphabetical) ──────────────
 export const SPORTS: string[] = [
@@ -195,136 +90,7 @@ export const SPORTS: string[] = [
 // ─── Calendar events ───────────────────────────────────
 export type CalendarEvent = CardData & { date: string }; // YYYY-MM-DD
 
-export const CALENDAR_EVENTS: CalendarEvent[] = [
-  {
-    id: 'cal-1',
-    date: '2024-01-01',
-    name: 'SUPER FUN BASEBALL DAY',
-    dateTime: '01/01 2024 12:30PM',
-    location: 'New York, NY',
-    level: 1,
-    mutualHighlight: 'Ling +3',
-    mutualBody: 'friends\nare members of this club',
-    price: '$20',
-    ctaLabel: 'Join Event',
-    ctaColor: '#82DC56',
-    ctaTextColor: colors.text.bold,
-  },
-  {
-    id: 'cal-2',
-    date: '2024-01-08',
-    name: 'CHILL BADMINTON GAMES',
-    dateTime: '01/08 2024 12:30PM',
-    location: 'New York, NY',
-    level: 1,
-    mutualHighlight: 'Ling +3',
-    mutualBody: 'friends\nare members of this club',
-    price: '$20',
-    ctaLabel: 'Join Event',
-    ctaColor: '#82DC56',
-    ctaTextColor: colors.text.bold,
-  },
-  {
-    id: 'cal-3',
-    date: '2024-01-08',
-    name: 'THRILLING MARATHON',
-    dateTime: '01/08 2024 12:30PM',
-    location: 'New York, NY',
-    level: 1,
-    mutualHighlight: 'Ling +3',
-    mutualBody: 'friends\nare members of this club',
-    price: '$20',
-    ctaLabel: 'Request to Join',
-    ctaColor: '#FFB854',
-    ctaTextColor: colors.text.bold,
-    adminApproval: true,
-  },
-  {
-    id: 'cal-4',
-    date: '2024-01-10',
-    name: 'EXCITING HANDBALL TEAM',
-    dateTime: '01/10 2024 2:00PM',
-    location: 'New York, NY',
-    level: 2,
-    mutualHighlight: 'Alex +2',
-    mutualBody: 'friends\nare members of this club',
-    price: '$25',
-    ctaLabel: 'Join Event',
-    ctaColor: '#66AAEF',
-    ctaTextColor: colors.text.bold,
-  },
-  {
-    id: 'cal-5',
-    date: '2024-01-17',
-    name: 'COOL PICKLEBALL CLUB',
-    dateTime: '01/17 2024 6:00PM',
-    location: 'Brooklyn, NY',
-    level: 3,
-    mutualHighlight: 'Sam +5',
-    mutualBody: 'friends\nare members of this club',
-    price: '$15',
-    ctaLabel: 'Join Event',
-    ctaColor: '#82DC56',
-    ctaTextColor: colors.text.bold,
-  },
-  {
-    id: 'cal-6',
-    date: '2024-01-18',
-    name: 'SUPER FUN BASEBALL DAY',
-    dateTime: '01/18 2024 12:30PM',
-    location: 'New York, NY',
-    level: 1,
-    mutualHighlight: 'Ling +3',
-    mutualBody: 'friends\nare members of this club',
-    price: '$20',
-    ctaLabel: 'Join Event',
-    ctaColor: '#82DC56',
-    ctaTextColor: colors.text.bold,
-  },
-  {
-    id: 'cal-7',
-    date: '2024-01-18',
-    name: 'DREAM SOCCER EVENT',
-    dateTime: '01/18 2024 12:30PM',
-    location: 'New York, NY',
-    level: 1,
-    mutualHighlight: 'Ling +3',
-    mutualBody: 'friends\nare members of this club',
-    price: '$20',
-    ctaLabel: 'Request to Join',
-    ctaColor: '#FFB854',
-    ctaTextColor: colors.text.bold,
-    adminApproval: true,
-  },
-  {
-    id: 'cal-8',
-    date: '2024-01-18',
-    name: 'SUPER SWIMMING COMPETITION',
-    dateTime: '01/18 2024 12:30PM',
-    location: 'New York, NY',
-    level: 1,
-    mutualHighlight: 'Ling +3',
-    mutualBody: 'friends\nare members of this club',
-    price: '$20',
-    ctaLabel: 'Join Event',
-    ctaColor: '#66AAEF',
-    ctaTextColor: colors.text.bold,
-  },
-  {
-    id: 'cal-9',
-    date: '2024-01-08',
-    name: 'SUPER SWIMMING COMPETITION',
-    dateTime: '01/08 2024 12:30PM',
-    location: 'New York, NY',
-    level: 1,
-    mutualHighlight: 'Ling +3',
-    mutualBody: 'friends\nare members of this club',
-    price: '$20',
-    ctaLabel: 'Join Event',
-    ctaColor: '#66AAEF',
-    ctaTextColor: colors.text.bold,
-  },
-];
+export const CALENDAR_EVENTS: CalendarEvent[] = [];
 
 /** Get events for a specific date */
 export function getEventsForDate(year: number, month: number, day: number): CalendarEvent[] {
@@ -388,129 +154,32 @@ export type MutualFriendInfo = {
 // ─── Current (logged-in) user ───────────────────────────
 
 export const CURRENT_USER: UserProfile = {
-  id: 'user-me',
-  name: 'Yein Lillian Lee',
-  handle: '@thelillianlee',
-  clubIds: ['club-1', 'club-2', 'club-4', 'club-5'],
-  friendIds: ['user-1', 'user-2', 'user-3'],
+  id: '',
+  name: '',
+  handle: '',
+  clubIds: [],
+  friendIds: [],
 };
 
 // ─── Other users ────────────────────────────────────────
 
-export const USERS: UserProfile[] = [
-  {
-    id: 'user-1',
-    name: 'Ling Cao',
-    handle: '@lingcao',
-    clubIds: ['club-1', 'club-2'],
-    friendIds: ['user-me', 'user-2', 'user-3'],
-  },
-  {
-    id: 'user-2',
-    name: 'Arthur Liao',
-    handle: '@arthurliao',
-    clubIds: ['club-1', 'club-3'],
-    friendIds: ['user-me', 'user-1', 'user-3'],
-  },
-  {
-    id: 'user-3',
-    name: 'Thomas Lu',
-    handle: '@thomaslu',
-    clubIds: ['club-2'],
-    friendIds: ['user-me'],
-  },
-  {
-    id: 'user-4',
-    name: 'Brian Kim',
-    handle: '@briankim',
-    clubIds: ['club-3'],
-    friendIds: [],
-  },
-  {
-    id: 'user-5',
-    name: 'Diana Chen',
-    handle: '@dianachen',
-    clubIds: [],
-    friendIds: [],
-  },
-  {
-    id: 'user-6',
-    name: 'Emma Wilson',
-    handle: '@emmawilson',
-    clubIds: ['club-1'],
-    friendIds: [],
-  },
-  {
-    id: 'user-7',
-    name: 'Felix Park',
-    handle: '@felixpark',
-    clubIds: ['club-2'],
-    friendIds: [],
-  },
-  {
-    id: 'user-8',
-    name: 'Grace Liu',
-    handle: '@graceliu',
-    clubIds: [],
-    friendIds: [],
-  },
-  {
-    id: 'user-9',
-    name: 'Henry Zhang',
-    handle: '@henryzhang',
-    clubIds: ['club-3'],
-    friendIds: [],
-  },
-];
+export const USERS: UserProfile[] = [];
 
 // ─── Friendship status map (relative to current user) ───
 
-export const INITIAL_FRIENDSHIP_STATUS: Record<string, FriendshipStatus> = {
-  'user-1': 'friends',
-  'user-2': 'friends',
-  'user-3': 'friends',
-  'user-4': 'none',
-  'user-5': 'none',
-  'user-6': 'pending',
-  'user-7': 'none',
-  'user-8': 'none',
-  'user-9': 'none',
-};
+export const INITIAL_FRIENDSHIP_STATUS: Record<string, FriendshipStatus> = {};
 
 // ─── Mutual friend info (when viewing another user) ─────
 
-export const MUTUAL_FRIEND_INFO: Record<string, MutualFriendInfo[]> = {
-  'user-1': [
-    { userId: 'user-2', description: '4 Clubs, Pickleball Event together' },
-    { userId: 'user-3', description: '1 Club together' },
-  ],
-  'user-2': [
-    { userId: 'user-1', description: '4 Clubs, Pickleball Event together' },
-    { userId: 'user-3', description: '2 Clubs together' },
-  ],
-  'user-3': [
-    { userId: 'user-1', description: '1 Club together' },
-  ],
-};
+export const MUTUAL_FRIEND_INFO: Record<string, MutualFriendInfo[]> = {};
 
 // ─── Suggestion descriptions (for Friend Suggestion) ────
 
-export const SUGGESTION_DESCRIPTIONS: Record<string, string> = {
-  'user-4': 'Went to Cool Pickleball Event together',
-  'user-5': 'From your contacts',
-  'user-6': 'A member of Cool Pickleball Club',
-  'user-7': 'From your contacts',
-  'user-8': 'Friends from contacts',
-  'user-9': 'Went to Cool Pickleball Event together',
-};
+export const SUGGESTION_DESCRIPTIONS: Record<string, string> = {};
 
 // ─── Friend descriptions (for MyProfileScreen) ─────────
 
-export const FRIEND_DESCRIPTIONS: Record<string, string> = {
-  'user-1': 'Went to Cool Pickleball Event together',
-  'user-2': 'A member of Cool Pickleball Club',
-  'user-3': 'Friends from contacts',
-};
+export const FRIEND_DESCRIPTIONS: Record<string, string> = {};
 
 // ─── Club detail data (for ClubScreen) ──────────────────
 
@@ -525,63 +194,7 @@ export type ClubDetail = {
   fee: string;
 };
 
-export const CLUB_DETAILS: Record<string, ClubDetail> = {
-  'club-1': {
-    id: 'club-1',
-    description:
-      'A fun and welcoming pickleball club for players of all levels. We meet weekly for games, drills, and social events.',
-    vibe: 'Casual',
-    sports: 'Pickleball',
-    adminIds: ['user-me'],
-    memberIds: ['user-me', 'user-1', 'user-2', 'user-6'],
-    eventIds: ['event-1'],
-    fee: '$20/ Mnth',
-  },
-  'club-2': {
-    id: 'club-2',
-    description:
-      'Competitive hockey games every week. We play hard but fair. Looking for skilled players who love the game.',
-    vibe: 'Competitive',
-    sports: 'Hockey',
-    adminIds: ['user-3'],
-    memberIds: ['user-me', 'user-1', 'user-3', 'user-7'],
-    eventIds: ['event-2'],
-    fee: '$25/ Mnth',
-  },
-  'club-3': {
-    id: 'club-3',
-    description:
-      'We run every Saturday rain or shine. All paces welcome. Great way to explore Central Park trails!',
-    vibe: 'Casual',
-    sports: 'Running',
-    adminIds: ['user-2'],
-    memberIds: ['user-2', 'user-4', 'user-9'],
-    eventIds: [],
-    fee: '$15/ Mnth',
-  },
-  'club-4': {
-    id: 'club-4',
-    description:
-      'Handball enthusiasts unite! Weekly practice sessions and friendly matches in Queens.',
-    vibe: 'Moderate',
-    sports: 'Handball',
-    adminIds: ['user-me'],
-    memberIds: ['user-me', 'user-5', 'user-8'],
-    eventIds: [],
-    fee: '$18/ Mnth',
-  },
-  'club-5': {
-    id: 'club-5',
-    description:
-      'Sunday morning tennis league with round-robin tournaments. Intermediate to advanced players.',
-    vibe: 'Competitive',
-    sports: 'Tennis',
-    adminIds: ['user-1'],
-    memberIds: ['user-me', 'user-1', 'user-4', 'user-6'],
-    eventIds: [],
-    fee: '$22/ Mnth',
-  },
-};
+export const CLUB_DETAILS: Record<string, ClubDetail> = {};
 
 export function getClubDetail(clubId: string): ClubDetail | undefined {
   return CLUB_DETAILS[clubId];
@@ -655,26 +268,7 @@ export type EventDetail = {
   fee: string;
 };
 
-export const EVENT_DETAILS: Record<string, EventDetail> = {
-  'event-1': {
-    id: 'event-1',
-    description:
-      'Relax and unwind with a sunset yoga session in Prospect Park. All levels welcome — mats provided. Stay for community snacks after!',
-    vibe: 'Casual',
-    hostIds: ['user-1'],
-    memberIds: ['user-me', 'user-1', 'user-3', 'user-5'],
-    fee: '$10',
-  },
-  'event-2': {
-    id: 'event-2',
-    description:
-      'Annual beach volleyball tournament at Coney Island! Competitive 4v4 format with prizes for the top teams. Sign up solo or with a squad.',
-    vibe: 'Competitive',
-    hostIds: ['user-2'],
-    memberIds: ['user-me', 'user-2', 'user-4', 'user-7'],
-    fee: '$30',
-  },
-};
+export const EVENT_DETAILS: Record<string, EventDetail> = {};
 
 export function getEventDetail(eventId: string): EventDetail | undefined {
   return EVENT_DETAILS[eventId];

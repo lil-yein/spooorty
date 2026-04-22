@@ -212,7 +212,7 @@ const styles = StyleSheet.create({
 
   // Inner content frame
   content: {
-    borderWidth: borderWidth.thin,
+    borderWidth: borderWidth.regular,
     borderColor: colors.border.subtle,
     borderRadius: borderRadius['16'],
     overflow: 'hidden',
@@ -316,7 +316,7 @@ const styles = StyleSheet.create({
   // Cost pill
   costPill: {
     width: 63,
-    borderWidth: borderWidth.thin,
+    borderWidth: borderWidth.regular,
     borderColor: colors.border.subtle,
     borderRadius: borderRadius['16'],
     paddingHorizontal: spacer['16'],
@@ -360,7 +360,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacer['16'],
     gap: spacer['8'],
     backgroundColor: colors.surface.bold,
-    borderWidth: borderWidth.thin,
+    borderWidth: borderWidth.regular,
     borderColor: colors.border.subtle,
   },
 

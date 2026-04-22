@@ -102,7 +102,7 @@ const styles = StyleSheet.create({
 
   unselectedContainer: {
     backgroundColor: 'transparent',
-    borderWidth: borderWidth.thin,
+    borderWidth: borderWidth.regular,
     borderColor: colors.border.subtle,
   },
 

@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacer['8'],
     borderRadius: borderRadius.round,
-    borderWidth: borderWidth.thin,
+    borderWidth: borderWidth.regular,
     overflow: 'hidden',
   },
 

@@ -147,7 +147,7 @@ export default function InnerContentCard({
 const styles = StyleSheet.create({
   // No outer padding wrapper — just the bordered container
   container: {
-    borderWidth: borderWidth.thin,
+    borderWidth: borderWidth.regular,
     borderColor: colors.border.subtle,
     borderRadius: borderRadius['16'],
     overflow: 'hidden',
@@ -248,7 +248,7 @@ const styles = StyleSheet.create({
 
   costPill: {
     width: 63,
-    borderWidth: borderWidth.thin,
+    borderWidth: borderWidth.regular,
     borderColor: colors.border.subtle,
     borderRadius: borderRadius['16'],
     paddingHorizontal: spacer['16'],
@@ -289,7 +289,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacer['16'],
     gap: spacer['8'],
     backgroundColor: colors.surface.bold,
-    borderWidth: borderWidth.thin,
+    borderWidth: borderWidth.regular,
     borderColor: colors.border.subtle,
   },
 

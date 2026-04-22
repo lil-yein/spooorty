@@ -312,7 +312,7 @@ const styles = StyleSheet.create({
 
   modalCardInner: {
     flex: 1,
-    borderWidth: borderWidth.thin,
+    borderWidth: borderWidth.regular,
     borderColor: colors.border.subtle,
     borderRadius: borderRadius['16'],
     backgroundColor: colors.surface.subtle,

@@ -307,7 +307,7 @@ const styles = StyleSheet.create({
   },
 
   cardInner: {
-    borderWidth: borderWidth.thin,
+    borderWidth: borderWidth.regular,
     borderColor: colors.border.subtle,
     borderRadius: borderRadius['16'],
     padding: spacer['16'],
@@ -393,7 +393,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacer['16'],
     paddingHorizontal: spacer['24'],
     alignItems: 'center',
-    borderTopWidth: borderWidth.thin,
+    borderTopWidth: borderWidth.regular,
     borderTopColor: colors.border.subtle,
   },
 

@@ -1228,7 +1228,7 @@ const styles = StyleSheet.create({
   },
 
   cardInner: {
-    borderWidth: borderWidth.thin,
+    borderWidth: borderWidth.regular,
     borderColor: colors.border.subtle,
     borderRadius: borderRadius['16'],
     overflow: 'hidden',
@@ -1295,7 +1295,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacer['8'],
-    borderWidth: borderWidth.thin,
+    borderWidth: borderWidth.regular,
     borderColor: colors.border.subtle,
     borderRadius: borderRadius.round,
     paddingHorizontal: spacer['12'],
@@ -1317,7 +1317,7 @@ const styles = StyleSheet.create({
   feeInput: {
     ...textStyles.body03Light,
     color: colors.text.bold,
-    borderWidth: borderWidth.thin,
+    borderWidth: borderWidth.regular,
     borderColor: colors.border.subtle,
     borderRadius: borderRadius.round,
     paddingHorizontal: spacer['12'],
@@ -1329,7 +1329,7 @@ const styles = StyleSheet.create({
   descriptionInput: {
     ...textStyles.body03Light,
     color: colors.text.bold,
-    borderWidth: borderWidth.thin,
+    borderWidth: borderWidth.regular,
     borderColor: colors.border.subtle,
     borderRadius: borderRadius['16'],
     paddingHorizontal: spacer['12'],
@@ -1394,7 +1394,7 @@ const styles = StyleSheet.create({
 
   modalCardInner: {
     flex: 1,
-    borderWidth: borderWidth.thin,
+    borderWidth: borderWidth.regular,
     borderColor: colors.border.subtle,
     borderRadius: borderRadius['16'],
     backgroundColor: colors.surface.subtle,
@@ -1562,7 +1562,7 @@ const styles = StyleSheet.create({
   sentButton: {
     backgroundColor: colors.surface.bold,
     borderRadius: borderRadius.round,
-    borderWidth: borderWidth.thin,
+    borderWidth: borderWidth.regular,
     borderColor: colors.border.subtle,
     paddingHorizontal: spacer['10'],
     paddingVertical: spacer['10'],

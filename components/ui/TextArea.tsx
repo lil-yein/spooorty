@@ -113,7 +113,7 @@ const styles = StyleSheet.create({
     gap: spacer['8'],
     padding: spacer['12'],
     borderRadius: borderRadius['16'],
-    borderWidth: borderWidth.thin,
+    borderWidth: borderWidth.regular,
     height: 64,
   },
 

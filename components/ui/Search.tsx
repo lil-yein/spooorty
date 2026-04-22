@@ -94,7 +94,7 @@ const styles = StyleSheet.create({
     gap: spacer['8'],
     padding: spacer['12'],
     borderRadius: borderRadius.round,
-    borderWidth: borderWidth.thin,
+    borderWidth: borderWidth.regular,
     overflow: 'hidden',
   },
 

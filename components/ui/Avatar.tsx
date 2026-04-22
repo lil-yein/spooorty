@@ -176,7 +176,7 @@ const styles = StyleSheet.create({
   // Text type
   textContainer: {
     backgroundColor: colors.surface.bold,
-    borderWidth: borderWidth.thin,
+    borderWidth: borderWidth.regular,
     borderColor: colors.border.subtle,
     alignItems: 'center',
     justifyContent: 'center',
@@ -195,7 +195,7 @@ const styles = StyleSheet.create({
     height: 16,
     borderRadius: 8,
     backgroundColor: colors.surface.bold,
-    borderWidth: borderWidth.thin,
+    borderWidth: borderWidth.regular,
     borderColor: colors.border.subtle,
     alignItems: 'center',
     justifyContent: 'center',

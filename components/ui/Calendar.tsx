@@ -182,7 +182,7 @@ const styles = StyleSheet.create({
   navButton: {
     padding: spacer['10'],
     borderRadius: borderRadius.round,
-    borderWidth: borderWidth.thin,
+    borderWidth: borderWidth.regular,
     borderColor: colors.border.subtle,
     backgroundColor: colors.surface.bold,
     alignItems: 'center',

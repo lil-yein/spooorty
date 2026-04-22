@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
 
   circleSelected: {
     backgroundColor: colors.surface.subtle,
-    borderWidth: borderWidth.thin,
+    borderWidth: borderWidth.regular,
     borderColor: colors.border.subtle,
   },
 

@@ -213,7 +213,7 @@ const styles = StyleSheet.create({
   // Emphasis: Subtle
   emphasisSubtle: {
     backgroundColor: colors.surface.bold,
-    borderWidth: borderWidth.thin,
+    borderWidth: borderWidth.regular,
     borderColor: colors.border.subtle,
   },
 

@@ -70,13 +70,13 @@ const styles = StyleSheet.create({
 
   trackOn: {
     backgroundColor: colors.surface.highlight,
-    borderWidth: borderWidth.thin,
+    borderWidth: borderWidth.regular,
     borderColor: colors.surface.highlight,
   },
 
   trackOff: {
     backgroundColor: colors.surface.bold,
-    borderWidth: borderWidth.thin,
+    borderWidth: borderWidth.regular,
     borderColor: colors.border.subtle,
   },
 

@@ -223,7 +223,7 @@ const styles = StyleSheet.create({
     marginTop: INDICATOR_H,
     height: BAR_HEIGHT,
     borderRadius: borderRadius.round,
-    borderWidth: borderWidth.thin,
+    borderWidth: borderWidth.regular,
     borderColor: colors.border.subtle,
     overflow: 'hidden',
   },

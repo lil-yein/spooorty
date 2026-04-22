@@ -164,7 +164,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: spacer['12'],
     borderRadius: borderRadius.round,
-    borderWidth: borderWidth.thin,
+    borderWidth: borderWidth.regular,
     overflow: 'hidden',
   },
 
@@ -190,7 +190,7 @@ const styles = StyleSheet.create({
 
   dropdown: {
     backgroundColor: colors.surface.bold,
-    borderWidth: borderWidth.thin,
+    borderWidth: borderWidth.regular,
     borderColor: colors.border.bold,
     borderRadius: borderRadius['16'],
     padding: spacer['16'],

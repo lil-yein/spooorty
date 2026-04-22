@@ -31,6 +31,7 @@ import {
 } from 'react-native';
 import Svg, { ClipPath, Defs, Path, Image as SvgImage } from 'react-native-svg';
 import { colors } from '../../lib/tokens/colors';
+import { borderWidth } from '../../lib/tokens/spacing';
 import { textStyles } from '../../lib/tokens/textStyles';
 
 // ─── Types ──────────────────────────────────────────────
@@ -175,7 +176,7 @@ const styles = StyleSheet.create({
   // Text type
   textContainer: {
     backgroundColor: colors.surface.bold,
-    borderWidth: 0.5,
+    borderWidth: borderWidth.thin,
     borderColor: colors.border.subtle,
     alignItems: 'center',
     justifyContent: 'center',
@@ -194,7 +195,7 @@ const styles = StyleSheet.create({
     height: 16,
     borderRadius: 8,
     backgroundColor: colors.surface.bold,
-    borderWidth: 0.5,
+    borderWidth: borderWidth.thin,
     borderColor: colors.border.subtle,
     alignItems: 'center',
     justifyContent: 'center',

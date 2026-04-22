@@ -36,7 +36,7 @@ import {
   type PressableProps,
 } from 'react-native';
 import { colors } from '../../lib/tokens/colors';
-import { spacer, borderRadius } from '../../lib/tokens/spacing';
+import { spacer, borderRadius, borderWidth } from '../../lib/tokens/spacing';
 import { textStyles } from '../../lib/tokens/textStyles';
 
 // ─── Types ──────────────────────────────────────────────
@@ -213,7 +213,7 @@ const styles = StyleSheet.create({
   // Emphasis: Subtle
   emphasisSubtle: {
     backgroundColor: colors.surface.bold,
-    borderWidth: 0.5,
+    borderWidth: borderWidth.thin,
     borderColor: colors.border.subtle,
   },
 

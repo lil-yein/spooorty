@@ -25,7 +25,7 @@ import {
   type PanResponderGestureState,
 } from 'react-native';
 import { colors } from '../../lib/tokens/colors';
-import { spacer, borderRadius } from '../../lib/tokens/spacing';
+import { spacer, borderRadius, borderWidth } from '../../lib/tokens/spacing';
 import { textStyles } from '../../lib/tokens/textStyles';
 
 // ─── Types ──────────────────────────────────────────────
@@ -191,7 +191,7 @@ const styles = StyleSheet.create({
     height: HANDLE_SIZE,
     borderRadius: borderRadius.round,
     backgroundColor: colors.surface.highlight,
-    borderWidth: 1,
+    borderWidth: borderWidth.regular,
     borderColor: colors.border.subtle,
     marginLeft: -HANDLE_SIZE / 2,
     cursor: 'grab' as any,

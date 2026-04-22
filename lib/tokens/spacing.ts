@@ -1,7 +1,7 @@
 /**
  * Spacing tokens — mapped 1:1 from Figma Variables (Spacer collection)
  *
- * Groups: grid, spacer, borderRadius
+ * Groups: grid, spacer, borderRadius, borderWidth
  */
 
 // ─── Grid ───────────────────────────────────────────────
@@ -55,6 +55,13 @@ export const borderRadius = {
   round: 999,
 } as const;
 
+// ─── Border Width ───────────────────────────────────────
+export const borderWidth = {
+  thin: 0.5,
+  regular: 1,
+} as const;
+
 export type GridToken = keyof typeof grid;
 export type SpacerToken = keyof typeof spacer;
 export type BorderRadiusToken = keyof typeof borderRadius;
+export type BorderWidthToken = keyof typeof borderWidth;

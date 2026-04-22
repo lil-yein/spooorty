@@ -1,6 +1,6 @@
 // Foundational tokens
 export { colors } from './colors';
-export { grid, spacer, borderRadius } from './spacing';
+export { grid, spacer, borderRadius, borderWidth } from './spacing';
 export { fontFamily, fontSize, lineHeight, fontWeight } from './typography';
 
 // Semantic tokens

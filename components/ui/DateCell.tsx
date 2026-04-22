@@ -21,7 +21,7 @@
 import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { colors } from '../../lib/tokens/colors';
-import { spacer, borderRadius } from '../../lib/tokens/spacing';
+import { spacer, borderRadius, borderWidth } from '../../lib/tokens/spacing';
 import { textStyles } from '../../lib/tokens/textStyles';
 
 // ─── Types ──────────────────────────────────────────────
@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
 
   circleSelected: {
     backgroundColor: colors.surface.subtle,
-    borderWidth: 0.5,
+    borderWidth: borderWidth.thin,
     borderColor: colors.border.subtle,
   },
 

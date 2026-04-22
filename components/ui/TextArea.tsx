@@ -27,8 +27,7 @@ import {
 } from 'react-native';
 import Icon from './Icon';
 import { colors } from '../../lib/tokens/colors';
-import { spacer } from '../../lib/tokens/spacing';
-import { borderRadius } from '../../lib/tokens/spacing';
+import { spacer, borderRadius, borderWidth } from '../../lib/tokens/spacing';
 import { textStyles } from '../../lib/tokens/textStyles';
 
 // ─── Types ──────────────────────────────────────────────
@@ -114,7 +113,7 @@ const styles = StyleSheet.create({
     gap: spacer['8'],
     padding: spacer['12'],
     borderRadius: borderRadius['16'],
-    borderWidth: 0.5,
+    borderWidth: borderWidth.thin,
     height: 64,
   },
 

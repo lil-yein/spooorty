@@ -20,7 +20,7 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, Pressable, StyleSheet, type ViewStyle, type LayoutChangeEvent } from 'react-native';
 import { colors } from '../../lib/tokens/colors';
-import { spacer, borderRadius } from '../../lib/tokens/spacing';
+import { spacer, borderRadius, borderWidth } from '../../lib/tokens/spacing';
 import { textStyles } from '../../lib/tokens/textStyles';
 
 // ─── Types ──────────────────────────────────────────────
@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderRadius: borderRadius.round,
-    borderWidth: 0.5,
+    borderWidth: borderWidth.thin,
     borderColor: colors.border.subtle,
     overflow: 'hidden',
   },

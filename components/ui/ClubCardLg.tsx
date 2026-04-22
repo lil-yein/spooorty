@@ -35,7 +35,7 @@ import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import Icon from './Icon';
 import { colors } from '../../lib/tokens/colors';
-import { spacer, borderRadius } from '../../lib/tokens/spacing';
+import { spacer, borderRadius, borderWidth } from '../../lib/tokens/spacing';
 import { textStyles } from '../../lib/tokens/textStyles';
 import Divider from './Divider';
 import Levels, { type LevelsProps } from './Levels';
@@ -190,7 +190,7 @@ const styles = StyleSheet.create({
   },
 
   content: {
-    borderWidth: 0.5,
+    borderWidth: borderWidth.thin,
     borderColor: colors.border.subtle,
     borderRadius: borderRadius['16'],
     overflow: 'hidden',
@@ -288,7 +288,7 @@ const styles = StyleSheet.create({
 
   costPill: {
     width: 63,
-    borderWidth: 0.5,
+    borderWidth: borderWidth.thin,
     borderColor: colors.border.subtle,
     borderRadius: borderRadius['16'],
     paddingHorizontal: spacer['16'],
@@ -329,7 +329,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacer['16'],
     gap: spacer['8'],
     backgroundColor: colors.surface.bold,
-    borderWidth: 0.5,
+    borderWidth: borderWidth.thin,
     borderColor: colors.border.subtle,
   },
 

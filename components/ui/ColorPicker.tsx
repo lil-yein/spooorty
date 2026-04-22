@@ -26,7 +26,7 @@ import {
 } from 'react-native';
 import Svg, { Path, Circle } from 'react-native-svg';
 import { colors } from '../../lib/tokens/colors';
-import { borderRadius } from '../../lib/tokens/spacing';
+import { borderRadius, borderWidth } from '../../lib/tokens/spacing';
 
 // ─── Types ──────────────────────────────────────────────
 
@@ -223,7 +223,7 @@ const styles = StyleSheet.create({
     marginTop: INDICATOR_H,
     height: BAR_HEIGHT,
     borderRadius: borderRadius.round,
-    borderWidth: 0.5,
+    borderWidth: borderWidth.thin,
     borderColor: colors.border.subtle,
     overflow: 'hidden',
   },

@@ -31,8 +31,7 @@ import {
 } from 'react-native';
 import Icon from './Icon';
 import { colors } from '../../lib/tokens/colors';
-import { spacer } from '../../lib/tokens/spacing';
-import { borderRadius } from '../../lib/tokens/spacing';
+import { spacer, borderRadius, borderWidth } from '../../lib/tokens/spacing';
 import { textStyles } from '../../lib/tokens/textStyles';
 
 // ─── Types ──────────────────────────────────────────────
@@ -165,7 +164,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: spacer['12'],
     borderRadius: borderRadius.round,
-    borderWidth: 0.5,
+    borderWidth: borderWidth.thin,
     overflow: 'hidden',
   },
 
@@ -191,7 +190,7 @@ const styles = StyleSheet.create({
 
   dropdown: {
     backgroundColor: colors.surface.bold,
-    borderWidth: 0.5,
+    borderWidth: borderWidth.thin,
     borderColor: colors.border.bold,
     borderRadius: borderRadius['16'],
     padding: spacer['16'],

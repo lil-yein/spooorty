@@ -19,7 +19,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { colors } from '../../lib/tokens/colors';
-import { borderRadius } from '../../lib/tokens/spacing';
+import { borderRadius, borderWidth } from '../../lib/tokens/spacing';
 
 // ─── Types ──────────────────────────────────────────────
 
@@ -70,13 +70,13 @@ const styles = StyleSheet.create({
 
   trackOn: {
     backgroundColor: colors.surface.highlight,
-    borderWidth: 0.5,
+    borderWidth: borderWidth.thin,
     borderColor: colors.surface.highlight,
   },
 
   trackOff: {
     backgroundColor: colors.surface.bold,
-    borderWidth: 0.5,
+    borderWidth: borderWidth.thin,
     borderColor: colors.border.subtle,
   },
 

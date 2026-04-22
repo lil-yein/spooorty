@@ -35,7 +35,7 @@ import {
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { colors } from '../../lib/tokens/colors';
-import { spacer, borderRadius } from '../../lib/tokens/spacing';
+import { spacer, borderRadius, borderWidth } from '../../lib/tokens/spacing';
 import { textStyles } from '../../lib/tokens/textStyles';
 import Button from './Button';
 import Icon from './Icon';
@@ -307,7 +307,7 @@ const styles = StyleSheet.create({
   },
 
   cardInner: {
-    borderWidth: 0.5,
+    borderWidth: borderWidth.thin,
     borderColor: colors.border.subtle,
     borderRadius: borderRadius['16'],
     padding: spacer['16'],
@@ -393,7 +393,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacer['16'],
     paddingHorizontal: spacer['24'],
     alignItems: 'center',
-    borderTopWidth: 0.5,
+    borderTopWidth: borderWidth.thin,
     borderTopColor: colors.border.subtle,
   },
 

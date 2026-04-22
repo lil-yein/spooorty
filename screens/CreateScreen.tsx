@@ -11,7 +11,7 @@ import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { colors } from '../lib/tokens/colors';
-import { spacer, borderRadius } from '../lib/tokens/spacing';
+import { spacer, borderRadius, borderWidth } from '../lib/tokens/spacing';
 import { textStyles } from '../lib/tokens/textStyles';
 import { Button, Icon } from '../components/ui';
 import type { CreateStackParamList } from '../navigation/CreateStack';
@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
 
   /* Inner bordered container */
   sectionInner: {
-    borderWidth: 0.5,
+    borderWidth: borderWidth.thin,
     borderColor: colors.border.subtle,
     borderRadius: borderRadius['16'],
     overflow: 'hidden',

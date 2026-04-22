@@ -27,7 +27,7 @@ import {
 } from 'react-native';
 import * as Location from 'expo-location';
 import { colors } from '../../lib/tokens/colors';
-import { spacer, borderRadius } from '../../lib/tokens/spacing';
+import { spacer, borderRadius, borderWidth } from '../../lib/tokens/spacing';
 import { textStyles } from '../../lib/tokens/textStyles';
 import {
   autocomplete,
@@ -312,7 +312,7 @@ const styles = StyleSheet.create({
 
   modalCardInner: {
     flex: 1,
-    borderWidth: 0.5,
+    borderWidth: borderWidth.thin,
     borderColor: colors.border.subtle,
     borderRadius: borderRadius['16'],
     backgroundColor: colors.surface.subtle,

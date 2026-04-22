@@ -29,7 +29,7 @@ import {
 } from 'react-native';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import { colors } from '../lib/tokens/colors';
-import { spacer, borderRadius } from '../lib/tokens/spacing';
+import { spacer, borderRadius, borderWidth } from '../lib/tokens/spacing';
 import { textStyles } from '../lib/tokens/textStyles';
 import {
   Avatar,
@@ -555,7 +555,7 @@ const styles = StyleSheet.create({
   },
 
   cardInner: {
-    borderWidth: 0.5,
+    borderWidth: borderWidth.thin,
     borderColor: colors.border.subtle,
     borderRadius: borderRadius['16'],
     overflow: 'hidden',

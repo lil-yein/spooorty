@@ -29,7 +29,7 @@ import {
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { CreateStackParamList } from '../navigation/CreateStack';
 import { colors } from '../lib/tokens/colors';
-import { spacer, borderRadius } from '../lib/tokens/spacing';
+import { spacer, borderRadius, borderWidth } from '../lib/tokens/spacing';
 import { textStyles } from '../lib/tokens/textStyles';
 import {
   Avatar,
@@ -1229,7 +1229,7 @@ const styles = StyleSheet.create({
   },
 
   cardInner: {
-    borderWidth: 0.5,
+    borderWidth: borderWidth.thin,
     borderColor: colors.border.subtle,
     borderRadius: borderRadius['16'],
     overflow: 'hidden',
@@ -1332,7 +1332,7 @@ const styles = StyleSheet.create({
   feeInput: {
     ...textStyles.body03Light,
     color: colors.text.bold,
-    borderWidth: 0.5,
+    borderWidth: borderWidth.thin,
     borderColor: colors.border.subtle,
     borderRadius: borderRadius.round,
     paddingHorizontal: spacer['12'],
@@ -1344,7 +1344,7 @@ const styles = StyleSheet.create({
   descriptionInput: {
     ...textStyles.body03Light,
     color: colors.text.bold,
-    borderWidth: 0.5,
+    borderWidth: borderWidth.thin,
     borderColor: colors.border.subtle,
     borderRadius: borderRadius['16'],
     paddingHorizontal: spacer['12'],
@@ -1402,7 +1402,7 @@ const styles = StyleSheet.create({
 
   modalCardInner: {
     flex: 1,
-    borderWidth: 0.5,
+    borderWidth: borderWidth.thin,
     borderColor: colors.border.subtle,
     borderRadius: borderRadius['16'],
     backgroundColor: colors.surface.subtle,

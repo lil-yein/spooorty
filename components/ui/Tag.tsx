@@ -23,8 +23,7 @@ import {
   type TextStyle,
 } from 'react-native';
 import { colors } from '../../lib/tokens/colors';
-import { spacer } from '../../lib/tokens/spacing';
-import { borderRadius } from '../../lib/tokens/spacing';
+import { spacer, borderRadius, borderWidth } from '../../lib/tokens/spacing';
 import { textStyles } from '../../lib/tokens/textStyles';
 
 // ─── Types ──────────────────────────────────────────────
@@ -103,7 +102,7 @@ const styles = StyleSheet.create({
 
   unselectedContainer: {
     backgroundColor: 'transparent',
-    borderWidth: 0.5,
+    borderWidth: borderWidth.thin,
     borderColor: colors.border.subtle,
   },
 

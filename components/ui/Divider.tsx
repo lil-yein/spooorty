@@ -6,13 +6,14 @@
  *
  * Anatomy (from Figma docs):
  *   Horizontal line, full width
- *   Bold: border/bold color, 0.5px
- *   Subtle: border/subtle color, 0.5px
+ *   Bold: border/bold color, 1px
+ *   Subtle: border/subtle color, 1px
  */
 
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { colors } from '../../lib/tokens/colors';
+import { borderWidth } from '../../lib/tokens/spacing';
 
 // ─── Types ──────────────────────────────────────────────
 
@@ -40,7 +41,7 @@ export default function Divider({ emphasis = 'Subtle' }: DividerProps) {
 
 const styles = StyleSheet.create({
   line: {
-    height: 0.5,
+    height: borderWidth.regular,
     width: '100%',
   },
 });

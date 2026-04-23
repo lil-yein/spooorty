@@ -238,7 +238,7 @@ const styles = StyleSheet.create({
   },
 
   title: {
-    ...textStyles.headline02Light,
+    ...textStyles.headline02Medium,
     color: colors.text.bold,
   },
 

@@ -189,7 +189,7 @@ const styles = StyleSheet.create({
   },
 
   header: {
-    paddingTop: spacer['64'],
+    paddingTop: spacer['24'],
     paddingHorizontal: spacer['24'],
     flexDirection: 'row',
     alignItems: 'center',

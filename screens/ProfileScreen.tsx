@@ -33,7 +33,7 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.surface.bold },
   content: {
-    paddingTop: spacer['64'],
+    paddingTop: spacer['24'],
     paddingHorizontal: spacer['16'],
     paddingBottom: 94,
   },

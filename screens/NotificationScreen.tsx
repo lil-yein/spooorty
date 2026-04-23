@@ -92,7 +92,7 @@ const styles = StyleSheet.create({
   },
 
   content: {
-    paddingTop: spacer['64'],
+    paddingTop: spacer['24'],
     paddingBottom: 94,
     paddingHorizontal: spacer['24'],
     gap: spacer['24'],

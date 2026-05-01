@@ -30,6 +30,7 @@ export { default as Icon } from './Icon';
 export { default as Select } from './Select';
 export { default as ClubItem } from './ClubItem';
 export { default as CoverPhotoModal } from './CoverPhotoModal';
+export { default as ProfilePhotoModal } from './ProfilePhotoModal';
 export { default as LocationSearchModal } from './LocationSearchModal';
 
 export type { ButtonProps } from './Button';
@@ -64,4 +65,5 @@ export type { IconType, IconVariant, IconProps } from './Icon';
 export type { SelectProps } from './Select';
 export type { ClubItemProps } from './ClubItem';
 export type { CoverPhotoModalProps } from './CoverPhotoModal';
+export type { ProfilePhotoModalProps } from './ProfilePhotoModal';
 export type { LocationSearchModalProps, SelectedLocation } from './LocationSearchModal';

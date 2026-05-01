@@ -1,10 +1,14 @@
 /**
  * App root — React Navigation entry point.
  *
- * Wraps the app in SafeAreaProvider + NavigationContainer,
- * then renders a root stack with:
- *   - Tabs (bottom tab navigator with custom BottomNav)
- *   - ComponentTest (dev screen, pushed from Profile)
+ * Wraps the app in SafeAreaProvider + NavigationContainer, then renders a
+ * root stack that swaps between three flows based on auth + onboarding state:
+ *
+ *   no session                          → Auth        (Welcome/Login/SignUp)
+ *   session + !onboarding_completed     → Onboarding  (ProfileSetup/SportsSelection)
+ *   session + onboarding_completed      → Tabs        (main app)
+ *
+ * The flag check happens in AuthContext on session change.
  */
 
 import React from 'react';
@@ -20,13 +24,15 @@ SplashScreen.preventAutoHideAsync();
 
 import { AuthProvider, useAuth } from './lib/AuthContext';
 import TabNavigator from './navigation/TabNavigator';
-import LoginScreen from './screens/LoginScreen';
+import AuthNavigator from './navigation/AuthNavigator';
+import OnboardingNavigator from './navigation/OnboardingNavigator';
 import ComponentTestScreen from './screens/ComponentTestScreen';
 
 // ─── Root Stack ─────────────────────────────────────────────
 
 export type RootStackParamList = {
-  Login: undefined;
+  Auth: undefined;
+  Onboarding: undefined;
   Tabs: undefined;
   ComponentTest: undefined;
 };
@@ -39,6 +45,19 @@ const linking: LinkingOptions<RootStackParamList> = {
   prefixes: [],
   config: {
     screens: {
+      Auth: {
+        screens: {
+          Welcome: '',
+          Login: 'Login',
+          SignUp: 'SignUp',
+        },
+      },
+      Onboarding: {
+        screens: {
+          ProfileSetup: 'ProfileSetup',
+          SportsSelection: 'SportsSelection',
+        },
+      },
       Tabs: {
         screens: {
           Discover: {
@@ -70,12 +89,13 @@ const linking: LinkingOptions<RootStackParamList> = {
   },
 };
 
-// ⚠️ DEV ONLY: set to true to skip login and go straight to Tabs
+// ⚠️ DEV ONLY: set to true to skip auth + onboarding and go straight to Tabs
 const DEV_SKIP_AUTH = false;
 
 function AppNavigator() {
-  const { session, loading } = useAuth();
+  const { session, loading, onboardingCompleted } = useAuth();
 
+  // Initial session check
   if (loading && !DEV_SKIP_AUTH) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
@@ -84,17 +104,35 @@ function AppNavigator() {
     );
   }
 
-  const showApp = DEV_SKIP_AUTH || session;
+  // Authenticated but still resolving the onboarding flag
+  if (session && onboardingCompleted === null && !DEV_SKIP_AUTH) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
+  // Decide which root flow to mount
+  const flow: 'auth' | 'onboarding' | 'tabs' = DEV_SKIP_AUTH
+    ? 'tabs'
+    : !session
+      ? 'auth'
+      : onboardingCompleted
+        ? 'tabs'
+        : 'onboarding';
 
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      {showApp ? (
+      {flow === 'auth' && <Stack.Screen name="Auth" component={AuthNavigator} />}
+      {flow === 'onboarding' && (
+        <Stack.Screen name="Onboarding" component={OnboardingNavigator} />
+      )}
+      {flow === 'tabs' && (
         <>
           <Stack.Screen name="Tabs" component={TabNavigator} />
           <Stack.Screen name="ComponentTest" component={ComponentTestScreen} />
         </>
-      ) : (
-        <Stack.Screen name="Login" component={LoginScreen} />
       )}
     </Stack.Navigator>
   );

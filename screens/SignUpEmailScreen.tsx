@@ -1,13 +1,12 @@
 /**
- * LoginScreen — "Welcome back" magic-link sign-in
+ * SignUpEmailScreen — magic-link email sign-up
  *
  * Two states:
- *   1. Email entry — "Welcome back" title + email input → Log In button
- *   2. Email sent — email locked in input → Check Your Inbox button
+ *   1. Email entry — "Let's get started" → Sign Up button
+ *   2. Email sent — "Tab the link in your email to complete sign up." → Check Your Inbox button
  *
- * Apple Sign-In (iOS only) is offered as an alternative below the divider.
- *
- * Layout matches SignUpEmailScreen so the auth flow feels consistent.
+ * After magic-link confirmation, the user lands authenticated; the app's
+ * onboarding gate then routes them through ProfileSetup → SportsSelection.
  */
 
 import React, { useState } from 'react';
@@ -22,19 +21,16 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { colors } from '../lib/tokens/colors';
-import { spacer, borderWidth } from '../lib/tokens/spacing';
+import { spacer } from '../lib/tokens/spacing';
 import { textStyles } from '../lib/tokens/textStyles';
-import { Button, Icon, Input } from '../components/ui';
+import { Button, Input } from '../components/ui';
 import { supabase } from '../lib/supabase';
-import { useAuth } from '../lib/AuthContext';
 import { validateEmail } from '../lib/validation';
 
-export default function LoginScreen() {
+export default function SignUpEmailScreen() {
   const navigation = useNavigation<any>();
-  const { signInWithApple } = useAuth();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
-  const [appleLoading, setAppleLoading] = useState(false);
   const [sent, setSent] = useState(false);
 
   const handleSendMagicLink = async () => {
@@ -56,16 +52,6 @@ export default function LoginScreen() {
     }
   };
 
-  const handleAppleSignIn = async () => {
-    setAppleLoading(true);
-    const { error } = await signInWithApple();
-    setAppleLoading(false);
-
-    if (error) {
-      Alert.alert('Apple Sign-In', error);
-    }
-  };
-
   // ─── Render ─────────────────────────────────────────────
   return (
     <KeyboardAvoidingView
@@ -74,31 +60,42 @@ export default function LoginScreen() {
     >
       <View style={styles.content}>
         <View style={styles.headerGroup}>
-          <Text style={styles.title}>Welcome back</Text>
+          <Text style={styles.title}>Let's get started</Text>
           <Text style={styles.subtitle}>
-            Sign in quickly with your email.{'\n'}No password needed.
+            {sent
+              ? 'Tab the link in your email to complete sign up.'
+              : 'Enter your email. We will send you confirmation email.'}
           </Text>
         </View>
 
         <View style={styles.inputGroup}>
-          <Input
-            size="Md"
-            placeholder="Log in with Email"
-            value={email}
-            onChangeText={setEmail}
-            editable={!sent}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoCorrect={false}
-            autoComplete="email"
-            returnKeyType="go"
-            onSubmitEditing={handleSendMagicLink}
-          />
+          {!sent && (
+            <Input
+              size="Md"
+              placeholder="Sign Up with Email"
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+              autoComplete="email"
+              returnKeyType="go"
+              onSubmitEditing={handleSendMagicLink}
+            />
+          )}
 
-          <Pressable onPress={() => navigation.navigate('SignUp')}>
+          {sent ? (
+            <Input
+              size="Md"
+              value={email.trim().toLowerCase()}
+              editable={false}
+            />
+          ) : null}
+
+          <Pressable onPress={() => navigation.navigate('Login')}>
             <Text style={styles.linkRow}>
-              Don't have an account?{' '}
-              <Text style={styles.linkAction}>Sign Up</Text>
+              Already have an account?{' '}
+              <Text style={styles.linkAction}>Log In</Text>
             </Text>
           </Pressable>
         </View>
@@ -106,32 +103,11 @@ export default function LoginScreen() {
         <View style={styles.ctaGroup}>
           <Button
             emphasis="Bold"
-            label={sent ? 'Check Your Inbox' : 'Log In'}
+            label={sent ? 'Check Your Inbox' : 'Sign Up'}
             state={loading ? 'Loading' : 'Enabled'}
             onPress={sent ? undefined : handleSendMagicLink}
             disabled={sent}
           />
-
-          {/* Apple Sign-In — iOS only, hidden in sent state */}
-          {Platform.OS === 'ios' && !sent && (
-            <>
-              <View style={styles.dividerRow}>
-                <View style={styles.dividerLine} />
-                <Text style={styles.dividerText}>or</Text>
-                <View style={styles.dividerLine} />
-              </View>
-
-              <Button
-                emphasis="Subtle"
-                label="Continue with Apple"
-                state={appleLoading ? 'Loading' : 'Enabled'}
-                leadingIcon={({ color, size }) => (
-                  <Icon type="apple" size={size} color={color} />
-                )}
-                onPress={handleAppleSignIn}
-              />
-            </>
-          )}
         </View>
       </View>
     </KeyboardAvoidingView>
@@ -185,23 +161,5 @@ const styles = StyleSheet.create({
   ctaGroup: {
     flex: 1,
     justifyContent: 'flex-end',
-    gap: spacer['16'],
-  },
-
-  dividerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacer['12'],
-  },
-
-  dividerLine: {
-    flex: 1,
-    height: borderWidth.regular,
-    backgroundColor: colors.border.subtle,
-  },
-
-  dividerText: {
-    ...textStyles.body03Light,
-    color: colors.text.subtle,
   },
 });

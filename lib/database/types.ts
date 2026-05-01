@@ -33,6 +33,8 @@ export type DbUser = {
   social_handle: string | null;
   social_platform: string | null;
   phone_hash: string | null;
+  preferred_sports: string[];
+  onboarding_completed: boolean;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -171,7 +173,16 @@ export type InsertNotification = Pick<DbNotification, 'recipient_id' | 'type' | 
 // ─── Update Types ─────────────────────────────────────────
 
 export type UpdateUser = Partial<
-  Pick<DbUser, 'display_name' | 'profile_photo_url' | 'social_handle' | 'social_platform' | 'phone_hash'>
+  Pick<
+    DbUser,
+    | 'display_name'
+    | 'profile_photo_url'
+    | 'social_handle'
+    | 'social_platform'
+    | 'phone_hash'
+    | 'preferred_sports'
+    | 'onboarding_completed'
+  >
 >;
 
 export type UpdateClub = Partial<

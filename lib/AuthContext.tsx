@@ -20,6 +20,13 @@ type AuthContextType = {
   session: Session | null;
   user: User | null;
   loading: boolean;
+  /**
+   * True once we've checked whether the signed-in user has completed
+   * onboarding. Stays null while logged out or while the check is pending.
+   */
+  onboardingCompleted: boolean | null;
+  /** Mark onboarding done locally (e.g. after the final SportsSelection step). */
+  setOnboardingCompleted: (done: boolean) => void;
   signOut: () => Promise<void>;
   signInWithApple: () => Promise<{ error?: string }>;
 };
@@ -28,6 +35,8 @@ const AuthContext = createContext<AuthContextType>({
   session: null,
   user: null,
   loading: true,
+  onboardingCompleted: null,
+  setOnboardingCompleted: () => {},
   signOut: async () => {},
   signInWithApple: async () => ({}),
 });
@@ -35,6 +44,30 @@ const AuthContext = createContext<AuthContextType>({
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [onboardingCompleted, setOnboardingCompleted] = useState<boolean | null>(null);
+
+  // Whenever session changes, look up the user's onboarding_completed flag
+  useEffect(() => {
+    let cancelled = false;
+    if (!session?.user) {
+      setOnboardingCompleted(null);
+      return;
+    }
+    supabase
+      .from('users')
+      .select('onboarding_completed')
+      .eq('id', session.user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (cancelled) return;
+        // If the row hasn't been created yet (trigger latency on a fresh
+        // signup), treat as not-onboarded so the user lands in onboarding.
+        setOnboardingCompleted(data?.onboarding_completed ?? false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [session?.user?.id]);
 
   useEffect(() => {
     // Check for existing session on mount
@@ -141,6 +174,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         session,
         user: session?.user ?? null,
         loading,
+        onboardingCompleted,
+        setOnboardingCompleted,
         signOut,
         signInWithApple,
       }}

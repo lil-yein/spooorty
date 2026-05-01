@@ -28,10 +28,15 @@ CREATE TABLE users (
   social_handle TEXT,          -- e.g., "@thelillianlee"
   social_platform TEXT,        -- e.g., "instagram"
   phone_hash TEXT,             -- hashed phone number for contact matching
+  preferred_sports TEXT[] NOT NULL DEFAULT '{}',  -- selected during onboarding
+  onboarding_completed BOOLEAN NOT NULL DEFAULT FALSE,
   is_active BOOLEAN DEFAULT TRUE,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Index for sport-based recommendations
+CREATE INDEX users_preferred_sports_idx ON users USING GIN (preferred_sports);
 
 -- ─── CLUBS ──────────────────────────────────────────────────
 

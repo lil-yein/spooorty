@@ -41,7 +41,7 @@ export default function LoginScreen() {
     const trimmed = email.trim().toLowerCase();
     const emailError = validateEmail(trimmed);
     if (emailError) {
-      Alert.alert('Invalid Email', emailError);
+      showError('Invalid Email', emailError);
       return;
     }
 
@@ -50,7 +50,7 @@ export default function LoginScreen() {
     setLoading(false);
 
     if (error) {
-      Alert.alert('Error', error.message);
+      showError('Could not send magic link', error.message);
     } else {
       setSent(true);
     }
@@ -62,7 +62,15 @@ export default function LoginScreen() {
     setAppleLoading(false);
 
     if (error) {
-      Alert.alert('Apple Sign-In', error);
+      showError('Apple Sign-In', error);
+    }
+  };
+
+  /** Alert.alert is unreliable on web — fall through to window.alert too. */
+  const showError = (title: string, msg: string) => {
+    Alert.alert(title, msg);
+    if (typeof window !== 'undefined' && window.alert) {
+      window.alert(`${title}: ${msg}`);
     }
   };
 

@@ -66,15 +66,27 @@ export default function SportsSelectionScreen() {
     if (!canSubmit || submitting) return;
     setSubmitting(true);
     try {
-      await completeOnboarding({
+      console.log('[Onboarding] submitting', {
+        displayName,
+        photoUri,
+        sportsCount: selected.size,
+      });
+      const updated = await completeOnboarding({
         displayName,
         photoUri,
         preferredSports: Array.from(selected),
       });
+      console.log('[Onboarding] saved', updated);
       // Flip the gate locally so App.tsx swaps Onboarding stack for Tabs
       setOnboardingCompleted(true);
     } catch (err: any) {
-      Alert.alert('Could not finish', err?.message ?? 'Please try again.');
+      console.error('[Onboarding] failed', err);
+      // Alert.alert is unreliable on web; show a window.alert fallback too
+      const msg = err?.message ?? 'Please try again.';
+      Alert.alert('Could not finish', msg);
+      if (typeof window !== 'undefined' && window.alert) {
+        window.alert(`Could not finish onboarding: ${msg}`);
+      }
       setSubmitting(false);
     }
   };

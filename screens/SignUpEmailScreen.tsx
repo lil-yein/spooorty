@@ -132,9 +132,9 @@ const styles = StyleSheet.create({
 
   content: {
     flex: 1,
-    paddingTop: spacer['24'],
+    paddingTop: spacer['64'],
     paddingHorizontal: spacer['24'],
-    paddingBottom: spacer['48'],
+    paddingBottom: spacer['64'],
     gap: spacer['24'],
   },
 
@@ -153,7 +153,7 @@ const styles = StyleSheet.create({
   },
 
   inputGroup: {
-    gap: spacer['12'],
+    gap: spacer['16'],
   },
 
   linkRow: {

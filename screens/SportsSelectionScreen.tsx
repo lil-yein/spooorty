@@ -57,10 +57,18 @@ export default function SportsSelectionScreen() {
   const canSubmit = selected.size >= MIN_SPORTS;
 
   // Filter "Other" / "Network" out of the visible list — those are filter-only
-  const visibleSports = useMemo(
+  const baseSports = useMemo(
     () => SPORTS.filter((s) => s !== 'Network' && s !== 'Other'),
     [],
   );
+
+  // Show selected sports first (in selection order), then the rest
+  // alphabetically. Matches the Figma where the user's picks float to the top.
+  const visibleSports = useMemo(() => {
+    const selectedList = Array.from(selected);
+    const remaining = baseSports.filter((s) => !selected.has(s));
+    return [...selectedList, ...remaining];
+  }, [baseSports, selected]);
 
   const handleSubmit = async () => {
     if (!canSubmit || submitting) return;
@@ -158,7 +166,7 @@ const styles = StyleSheet.create({
   },
 
   title: {
-    ...textStyles.headline02Medium,
+    ...textStyles.headline01Medium,
     color: colors.text.bold,
   },
 

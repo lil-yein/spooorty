@@ -37,7 +37,9 @@ export type ProfilePhotoModalProps = {
   visible: boolean;
   onClose: () => void;
   onImageSelected: (uri: string) => void;
-  /** Default search query for the stock browser. Defaults to "portrait". */
+  /** Default search query for the stock browser. Defaults to "Pickleball"
+   * (matching Figma); profile-photo selection happens before the user picks
+   * sports, so we use a sport the audience is likely to identify with. */
   defaultQuery?: string;
 };
 
@@ -55,7 +57,7 @@ export default function ProfilePhotoModal({
   visible,
   onClose,
   onImageSelected,
-  defaultQuery = 'portrait',
+  defaultQuery = 'Pickleball',
 }: ProfilePhotoModalProps) {
   const [showStockBrowser, setShowStockBrowser] = useState(false);
   const [stockQuery, setStockQuery] = useState(defaultQuery);
@@ -269,7 +271,6 @@ const styles = StyleSheet.create({
   title: {
     ...textStyles.title01Medium,
     color: colors.text.bold,
-    textAlign: 'center',
   },
 
   buttons: {

@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
   },
 
   title: {
-    ...textStyles.headline02Medium,
+    ...textStyles.headline01Medium,
     color: colors.text.bold,
   },
 

@@ -78,9 +78,12 @@ const styles = StyleSheet.create({
     width: '100%',
   },
 
+  // Very subtle scrim helps title legibility if the hero image gets brighter
+  // in the top region — current image already has a dark crowd background so
+  // this barely registers, but it's insurance for future hero swaps.
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.25)',
+    backgroundColor: 'rgba(0,0,0,0.08)',
   },
 
   content: {

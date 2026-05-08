@@ -59,7 +59,7 @@ export default function ProfileSetupScreen() {
         </View>
 
         <View style={styles.body}>
-          {/* Avatar with camera button overlay */}
+          {/* Avatar with camera button overlay (centered) */}
           <View style={styles.avatarWrap}>
             <Avatar
               type="Image"
@@ -75,16 +75,19 @@ export default function ProfileSetupScreen() {
             </Pressable>
           </View>
 
-          <Input
-            size="Md"
-            placeholder="Name"
-            value={displayName}
-            onChangeText={setDisplayName}
-            autoCapitalize="words"
-            autoCorrect={false}
-            returnKeyType="done"
-            onSubmitEditing={handleNext}
-          />
+          {/* Full-width input row */}
+          <View style={styles.inputRow}>
+            <Input
+              size="Md"
+              placeholder="Name"
+              value={displayName}
+              onChangeText={setDisplayName}
+              autoCapitalize="words"
+              autoCorrect={false}
+              returnKeyType="done"
+              onSubmitEditing={handleNext}
+            />
+          </View>
         </View>
 
         <View style={styles.ctaGroup}>
@@ -117,10 +120,10 @@ const styles = StyleSheet.create({
 
   content: {
     flex: 1,
-    paddingTop: spacer['24'],
+    paddingTop: spacer['64'],
     paddingHorizontal: spacer['24'],
-    paddingBottom: spacer['48'],
-    gap: spacer['48'],
+    paddingBottom: spacer['64'],
+    gap: spacer['24'],
   },
 
   headerGroup: {
@@ -137,13 +140,19 @@ const styles = StyleSheet.create({
     color: colors.text.subtle,
   },
 
+  // Body holds avatar + input. Avatar centers via avatarWrap's alignSelf,
+  // input stays full-width via inputRow's alignSelf: stretch.
   body: {
-    alignItems: 'center',
-    gap: spacer['32'],
+    gap: spacer['24'],
   },
 
   avatarWrap: {
     position: 'relative',
+    alignSelf: 'center',
+  },
+
+  inputRow: {
+    alignSelf: 'stretch',
   },
 
   cameraButton: {

@@ -175,14 +175,18 @@ export default function ComponentTestScreen() {
               trailingIcon={({ color, size }) => <Icon type="share" color={color} size={size} />}
             />
           </Row>
-          <Row label="State: Loading">
-            <Button emphasis="Bold" state="Loading" label="Loading..." />
-            <Button emphasis="Subtle" state="Loading" label="Loading..." />
+          <Row label="State: Loading (label + spinner, non-interactive)">
+            <Button emphasis="Bold" state="Loading" label="Saving..." />
+            <Button emphasis="Subtle" state="Loading" label="Saving..." />
           </Row>
-          <Row label="State: Disabled">
-            <Button emphasis="Bold" disabled label="Disabled" />
-            <Button emphasis="Subtle" disabled label="Disabled" />
-            <Button emphasis="Minimal" disabled label="Disabled" />
+          <Row label="State: Disabled (muted text, non-interactive)">
+            <Button emphasis="Bold" state="Disabled" label="Disabled" />
+            <Button emphasis="Subtle" state="Disabled" label="Disabled" />
+            <Button emphasis="Minimal" state="Disabled" label="Disabled" />
+          </Row>
+          <Row label="Legacy `disabled` prop (opacity + muted)">
+            <Button emphasis="Bold" disabled label="Disabled (legacy)" />
+            <Button emphasis="Subtle" disabled label="Disabled (legacy)" />
           </Row>
           <Row label="With Leading Icon">
             <Button

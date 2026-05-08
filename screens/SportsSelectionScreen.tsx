@@ -134,12 +134,11 @@ export default function SportsSelectionScreen() {
         <Button
           emphasis={canSubmit ? 'Bold' : 'Subtle'}
           label={canSubmit ? "Let's get started!" : `Choose at least ${MIN_SPORTS}`}
-          // Submitting takes precedence — show real spinner during the
-          // network call. Otherwise the visual "non-actionable" state
-          // is conveyed by the Subtle emphasis + disabled flag.
-          state={submitting ? 'Loading' : 'Enabled'}
+          // Three-way state: Loading during the submit network call,
+          // Disabled when the user hasn't picked enough sports yet
+          // (muted text, non-interactive), Enabled otherwise.
+          state={submitting ? 'Loading' : canSubmit ? 'Enabled' : 'Disabled'}
           onPress={handleSubmit}
-          disabled={!canSubmit || submitting}
         />
       </View>
     </View>

@@ -6,17 +6,29 @@
  *   textStyle: Medium | Light
  *   content: Text | Icon
  *   size: Sm | Md
- *   state: Enabled | Loading
+ *   state: Enabled | Disabled | Loading
  *   label: string (for Text content)
  *   leadingIcon: ReactNode (optional)
  *   trailingIcon: ReactNode (optional)
  *   icon: ReactNode (for Icon content)
  *
+ * State semantics:
+ *   Enabled  — interactive, normal colors
+ *   Disabled — non-interactive, muted text + icon (text/subtle, icon/subtle).
+ *              No spinner. Use this for "form not yet valid" / "min N items
+ *              not selected" cases. Replaces what used to be `state="Loading"`
+ *              for that visual.
+ *   Loading  — non-interactive, normal colors PLUS a small spinner shown
+ *              before the label (for Text content) or replacing the icon
+ *              (for Icon content). Use this for genuine in-flight async
+ *              operations so the user sees both the action label and a
+ *              progress indicator.
+ *
  * Anatomy (from Figma docs):
  *   Bold:    surface/inverse bg, text/onhighlight, icon/onhighlight
- *   Subtle:  surface/bold bg, border/subtle 0.5px, text/bold, icon/bold
+ *   Subtle:  surface/bold bg, border/subtle 1px, text/bold, icon/bold
  *   Minimal: surface/bold bg, no border, text/bold, icon/bold
- *   Loading: text/subtle, icon/subtle for all emphasis levels
+ *   Disabled: text/subtle, icon/subtle for all emphasis levels
  *   Text content: fills container width
  *   Icon content: hugs content
  *   Md: height 48, padding spacer/16, gap spacer/8
@@ -45,7 +57,7 @@ type Emphasis = 'Bold' | 'Subtle' | 'Minimal';
 type ButtonTextStyle = 'Medium' | 'Light';
 type Content = 'Text' | 'Icon';
 type Size = 'Sm' | 'Md';
-type State = 'Enabled' | 'Loading';
+type State = 'Enabled' | 'Disabled' | 'Loading';
 
 /** Render function for icons — receives resolved color and size */
 type IconRenderer = (props: { color: string; size: number }) => React.ReactNode;
@@ -84,7 +96,14 @@ export default function Button({
 }: ButtonProps) {
   const iconSize = size === 'Sm' ? 12 : 16;
   const isLoading = state === 'Loading';
-  const isDisabled = disabled || isLoading;
+  const isStateDisabled = state === 'Disabled';
+  // The button shouldn't fire onPress while loading or in the Disabled
+  // state, and the legacy `disabled` prop still hard-disables it.
+  const isInteractionBlocked = disabled || isLoading || isStateDisabled;
+  // Muted text/icon visual: applied for Disabled state OR the legacy
+  // `disabled` prop. Loading keeps full-color label so users can still
+  // read the action that's in flight.
+  const showMutedColors = isStateDisabled || disabled;
 
   // ── Container styles ────────────────────────────────────
   const containerStyle: ViewStyle[] = [
@@ -98,14 +117,15 @@ export default function Button({
     emphasis === 'Bold' && styles.emphasisBold,
     emphasis === 'Subtle' && styles.emphasisSubtle,
     emphasis === 'Minimal' && styles.emphasisMinimal,
-    // Disabled: reduce opacity
+    // Legacy `disabled` prop still applies opacity for backward compat;
+    // the new Disabled state relies on muted colors alone (per Figma).
     disabled && styles.disabled,
   ].filter(Boolean) as ViewStyle[];
 
   // ── Text color ──────────────────────────────────────────
   const textColor: string = overrideTextColor
     ? overrideTextColor
-    : isLoading || disabled
+    : showMutedColors
       ? colors.text.subtle
       : emphasis === 'Bold'
         ? colors.text.onhighlight
@@ -114,7 +134,7 @@ export default function Button({
   // ── Icon color ──────────────────────────────────────────
   const iconColor: string = overrideTextColor
     ? overrideTextColor
-    : isLoading || disabled
+    : showMutedColors
       ? colors.icon.subtle
       : emphasis === 'Bold'
         ? colors.icon.onhighlight
@@ -130,21 +150,25 @@ export default function Button({
     <Pressable
       style={containerStyle}
       onPress={onPress}
-      disabled={isDisabled}
+      disabled={isInteractionBlocked}
     >
       {content === 'Text' ? (
         <>
-          {leadingIcon && (
+          {/* When loading, the spinner takes the leadingIcon slot. Otherwise
+              we render the leadingIcon if one was provided. */}
+          {isLoading ? (
+            <View style={styles.iconWrapper}>
+              <ActivityIndicator size="small" color={iconColor} />
+            </View>
+          ) : leadingIcon ? (
             <View style={styles.iconWrapper}>
               {leadingIcon({ color: iconColor, size: iconSize })}
             </View>
-          )}
+          ) : null}
 
-          {isLoading ? (
-            <ActivityIndicator size="small" color={textColor} />
-          ) : (
-            <Text style={[labelStyle, { color: textColor }]}>{label}</Text>
-          )}
+          {/* Label is always visible — even during Loading — so users can
+              read the action that's in flight. */}
+          <Text style={[labelStyle, { color: textColor }]}>{label}</Text>
 
           {trailingIcon && (
             <View style={styles.iconWrapper}>
@@ -153,7 +177,7 @@ export default function Button({
           )}
         </>
       ) : (
-        // Icon-only content
+        // Icon-only content: spinner replaces the icon during Loading.
         <View style={styles.iconWrapper}>
           {isLoading ? (
             <ActivityIndicator size="small" color={iconColor} />

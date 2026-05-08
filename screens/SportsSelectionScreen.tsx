@@ -53,7 +53,6 @@ export default function SportsSelectionScreen() {
     });
   }, []);
 
-  const remaining = Math.max(0, MIN_SPORTS - selected.size);
   const canSubmit = selected.size >= MIN_SPORTS;
 
   // Filter "Other" / "Network" out of the visible list — those are filter-only
@@ -66,8 +65,8 @@ export default function SportsSelectionScreen() {
   // alphabetically. Matches the Figma where the user's picks float to the top.
   const visibleSports = useMemo(() => {
     const selectedList = Array.from(selected);
-    const remaining = baseSports.filter((s) => !selected.has(s));
-    return [...selectedList, ...remaining];
+    const unselected = baseSports.filter((s) => !selected.has(s));
+    return [...selectedList, ...unselected];
   }, [baseSports, selected]);
 
   const handleSubmit = async () => {
@@ -128,19 +127,19 @@ export default function SportsSelectionScreen() {
         </View>
       </ScrollView>
 
-      <View style={styles.footer}>
-        {!canSubmit && (
-          <Text style={styles.hint}>
-            Choose at least {remaining} more
-          </Text>
-        )}
+      {/* Footer floats over the scroll content (no background) so the last
+          row of tags can be partially visible behind it — matches the
+          Figma where the CTA overlaps the bottom of the tag grid. */}
+      <View style={styles.footer} pointerEvents="box-none">
         <Button
-          emphasis="Bold"
-          label="Let's get started!"
+          emphasis={canSubmit ? 'Bold' : 'Subtle'}
+          label={canSubmit ? "Let's get started!" : `Choose at least ${MIN_SPORTS}`}
+          // Submitting takes precedence — show real spinner during the
+          // network call. Otherwise the visual "non-actionable" state
+          // is conveyed by the Subtle emphasis + disabled flag.
           state={submitting ? 'Loading' : 'Enabled'}
           onPress={handleSubmit}
           disabled={!canSubmit || submitting}
-          overrideTextColor={!canSubmit ? colors.text.subtle : undefined}
         />
       </View>
     </View>
@@ -156,7 +155,7 @@ const styles = StyleSheet.create({
   },
 
   headerWrap: {
-    paddingTop: spacer['24'],
+    paddingTop: spacer['64'],
     paddingHorizontal: spacer['24'],
     paddingBottom: spacer['24'],
   },
@@ -179,9 +178,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 
+  // Bottom padding leaves room for the floating CTA so the last row of
+  // tags can scroll above it: button height (48) + spacer/64 bottom inset
+  // + spacer/24 breathing room.
   scrollContent: {
     paddingHorizontal: spacer['24'],
-    paddingBottom: spacer['24'],
+    paddingBottom: spacer['64'] + 48 + spacer['24'],
   },
 
   tagGrid: {
@@ -190,16 +192,14 @@ const styles = StyleSheet.create({
     gap: spacer['8'],
   },
 
+  // Floating footer — no background, anchored to bottom, lets sports
+  // grid behind it remain visible (per Figma). pointerEvents="box-none"
+  // on the wrapper lets taps pass through outside the button.
   footer: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: spacer['64'],
     paddingHorizontal: spacer['24'],
-    paddingTop: spacer['16'],
-    paddingBottom: spacer['48'],
-    gap: spacer['12'],
-  },
-
-  hint: {
-    ...textStyles.body03Light,
-    color: colors.text.subtle,
-    textAlign: 'center',
   },
 });

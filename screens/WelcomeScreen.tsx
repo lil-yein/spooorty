@@ -2,9 +2,15 @@
  * WelcomeScreen — entry point of the auth flow
  *
  * Layout:
- *   Full-bleed hero image (sports photo) as background
+ *   Hero image fills the full screen (100% height & width) as background
  *   Title group at top: "Spooorty" + tagline "Find your people. Play your sport."
- *   Buttons at bottom (side-by-side): "Log In" (Subtle), "Sign Up" (Bold)
+ *     gap spacer/16 between title and tagline
+ *     content paddingTop spacer/64
+ *   Buttons at bottom (side-by-side):
+ *     "Log In"  → Bold   (black bg, white text) — primary CTA for returning users
+ *     "Sign Up" → Subtle (white bg, black text)
+ *     gap spacer/16 between buttons
+ *     content paddingBottom spacer/64
  *
  * Routes:
  *   Log In  → LoginScreen
@@ -32,9 +38,6 @@ export default function WelcomeScreen() {
   return (
     <View style={styles.container}>
       <ImageBackground source={HERO} style={styles.hero} resizeMode="cover">
-        {/* Subtle dark scrim so the title reads cleanly over photography */}
-        <View style={styles.overlay} />
-
         <View style={styles.content}>
           <View style={styles.titleGroup}>
             <Text style={styles.title}>Spooorty</Text>
@@ -46,14 +49,14 @@ export default function WelcomeScreen() {
           <View style={styles.buttons}>
             <View style={styles.buttonHalf}>
               <Button
-                emphasis="Subtle"
+                emphasis="Bold"
                 label="Log In"
                 onPress={() => navigation.navigate('Login')}
               />
             </View>
             <View style={styles.buttonHalf}>
               <Button
-                emphasis="Bold"
+                emphasis="Subtle"
                 label="Sign Up"
                 onPress={() => navigation.navigate('SignUp')}
               />
@@ -76,26 +79,19 @@ const styles = StyleSheet.create({
   hero: {
     flex: 1,
     width: '100%',
-  },
-
-  // Very subtle scrim helps title legibility if the hero image gets brighter
-  // in the top region — current image already has a dark crowd background so
-  // this barely registers, but it's insurance for future hero swaps.
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.08)',
+    height: '100%',
   },
 
   content: {
     flex: 1,
     justifyContent: 'space-between',
-    paddingTop: spacer['24'],
+    paddingTop: spacer['64'],
     paddingHorizontal: spacer['24'],
-    paddingBottom: spacer['48'],
+    paddingBottom: spacer['64'],
   },
 
   titleGroup: {
-    gap: spacer['8'],
+    gap: spacer['16'],
   },
 
   title: {
@@ -110,7 +106,7 @@ const styles = StyleSheet.create({
 
   buttons: {
     flexDirection: 'row',
-    gap: spacer['12'],
+    gap: spacer['16'],
   },
 
   buttonHalf: {

@@ -28,6 +28,7 @@ CREATE TABLE users (
   social_handle TEXT,          -- e.g., "@thelillianlee"
   social_platform TEXT,        -- e.g., "instagram"
   phone_hash TEXT,             -- hashed phone number for contact matching
+  phone_number TEXT CHECK (phone_number IS NULL OR char_length(phone_number) BETWEEN 4 AND 32),
   preferred_sports TEXT[] NOT NULL DEFAULT '{}',  -- selected during onboarding
   onboarding_completed BOOLEAN NOT NULL DEFAULT FALSE,
   is_active BOOLEAN DEFAULT TRUE,

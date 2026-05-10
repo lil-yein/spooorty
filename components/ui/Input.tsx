@@ -36,6 +36,8 @@ export type InputProps = {
   placeholder?: string;
   value?: string;
   onChangeText?: (text: string) => void;
+  /** Trailing pencil/edit icon. Defaults to true. */
+  showTrailingIcon?: boolean;
 } & Omit<TextInputProps, 'style' | 'placeholderTextColor'>;
 
 // ─── Size config ────────────────────────────────────────
@@ -60,10 +62,12 @@ export default function Input({
   placeholder = 'Enter text',
   value,
   onChangeText,
+  showTrailingIcon = true,
   ...rest
 }: InputProps) {
   const [focused, setFocused] = useState(false);
   const config = SIZE_CONFIG[size];
+  const isReadOnly = rest.editable === false;
 
   return (
     <View
@@ -82,7 +86,7 @@ export default function Input({
         value={value}
         onChangeText={onChangeText}
         onFocus={(e) => {
-          setFocused(true);
+          if (!isReadOnly) setFocused(true);
           rest.onFocus?.(e);
         }}
         onBlur={(e) => {
@@ -90,19 +94,22 @@ export default function Input({
           rest.onBlur?.(e);
         }}
         {...rest}
+        focusable={isReadOnly ? false : rest.focusable}
       />
-      <View
-        style={[
-          styles.iconWrap,
-          { width: config.iconSize, height: config.iconSize },
-        ]}
-      >
-        <Icon
-          type="edit"
-          size={config.iconSize}
-          color={value ? colors.icon.bold : colors.icon.subtle}
-        />
-      </View>
+      {showTrailingIcon && (
+        <View
+          style={[
+            styles.iconWrap,
+            { width: config.iconSize, height: config.iconSize },
+          ]}
+        >
+          <Icon
+            type="edit"
+            size={config.iconSize}
+            color={value ? colors.icon.bold : colors.icon.subtle}
+          />
+        </View>
+      )}
     </View>
   );
 }

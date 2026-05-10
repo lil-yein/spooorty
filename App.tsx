@@ -106,6 +106,7 @@ function buildLinking(kind: LinkingKind): LinkingOptions<RootStackParamList> {
             Profile: {
               screens: {
                 ProfileHome: 'Profile',
+                EditProfile: 'Profile/Edit',
                 OtherUserProfile: 'Profile/OtherUserProfile/:userId',
                 Club: 'Profile/Club/:clubId',
                 Event: 'Profile/Event/:eventId',

@@ -57,7 +57,8 @@ const styles = StyleSheet.create({
   },
 
   actionsRow: {
-    width: 345,
+    alignSelf: 'stretch',
+    marginHorizontal: spacer['24'],
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacer['8'],

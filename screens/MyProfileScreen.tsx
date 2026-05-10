@@ -148,6 +148,7 @@ export default function MyProfileScreen() {
               icon={({ color, size }) => (
                 <Icon type="edit" size={size} color={color} />
               )}
+              onPress={() => navigation.navigate('EditProfile')}
             />
             <Button
               emphasis="Subtle"

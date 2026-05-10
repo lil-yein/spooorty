@@ -33,6 +33,7 @@ export type DbUser = {
   social_handle: string | null;
   social_platform: string | null;
   phone_hash: string | null;
+  phone_number: string | null;
   preferred_sports: string[];
   onboarding_completed: boolean;
   is_active: boolean;
@@ -180,6 +181,7 @@ export type UpdateUser = Partial<
     | 'social_handle'
     | 'social_platform'
     | 'phone_hash'
+    | 'phone_number'
     | 'preferred_sports'
     | 'onboarding_completed'
   >

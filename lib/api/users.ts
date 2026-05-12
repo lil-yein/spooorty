@@ -61,6 +61,29 @@ export async function updateCurrentUserProfile(updates: UpdateUser): Promise<DbU
   return data;
 }
 
+/**
+ * Deactivate the current user's account. Soft-disables the row so the user
+ * can reactivate by signing in again (we flip is_active back on sign-in
+ * elsewhere if/when we wire that up).
+ */
+export async function deactivateCurrentUser(): Promise<void> {
+  await updateCurrentUserProfile({ is_active: false });
+}
+
+/**
+ * Permanently delete the current user's account.
+ *
+ * Calls the `delete-account` Edge Function, which uses the service-role
+ * key to remove the auth.users row. The ON DELETE CASCADE on
+ * public.users.id then wipes the profile and all related rows.
+ */
+export async function deleteCurrentUser(): Promise<void> {
+  const { error } = await supabase.functions.invoke('delete-account', {
+    method: 'POST',
+  });
+  if (error) throw error;
+}
+
 /** Search users by display name (for friend search, member invite) */
 export async function searchUsers(query: string, limit = 20): Promise<DbUser[]> {
   const { data, error } = await supabase

@@ -157,6 +157,7 @@ export default function MyProfileScreen() {
               icon={({ color, size }) => (
                 <Icon type="setting" size={size} color={color} />
               )}
+              onPress={() => navigation.navigate('Settings')}
             />
           </View>
         </View>

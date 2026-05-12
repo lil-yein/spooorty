@@ -29,6 +29,16 @@ CREATE TABLE users (
   social_platform TEXT,        -- e.g., "instagram"
   phone_hash TEXT,             -- hashed phone number for contact matching
   phone_number TEXT CHECK (phone_number IS NULL OR char_length(phone_number) BETWEEN 4 AND 32),
+  -- Notification preferences (one toggle per notification category)
+  notif_friend_request BOOLEAN NOT NULL DEFAULT TRUE,
+  notif_friend_accepted BOOLEAN NOT NULL DEFAULT TRUE,
+  notif_join_request BOOLEAN NOT NULL DEFAULT TRUE,
+  notif_join_decision BOOLEAN NOT NULL DEFAULT TRUE,
+  notif_event_update BOOLEAN NOT NULL DEFAULT TRUE,
+  notif_club_update BOOLEAN NOT NULL DEFAULT TRUE,
+  -- Privacy
+  account_visibility TEXT NOT NULL DEFAULT 'public' CHECK (account_visibility IN ('public', 'private')),
+  friend_suggestions_from_contacts BOOLEAN NOT NULL DEFAULT FALSE,
   preferred_sports TEXT[] NOT NULL DEFAULT '{}',  -- selected during onboarding
   onboarding_completed BOOLEAN NOT NULL DEFAULT FALSE,
   is_active BOOLEAN DEFAULT TRUE,

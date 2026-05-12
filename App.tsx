@@ -107,6 +107,11 @@ function buildLinking(kind: LinkingKind): LinkingOptions<RootStackParamList> {
               screens: {
                 ProfileHome: 'Profile',
                 EditProfile: 'Profile/Edit',
+                Settings: 'Profile/Settings',
+                NotificationSettings: 'Profile/Settings/Notification',
+                AccountSettings: 'Profile/Settings/Account',
+                PrivacySettings: 'Profile/Settings/Privacy',
+                About: 'Profile/Settings/About',
                 OtherUserProfile: 'Profile/OtherUserProfile/:userId',
                 Club: 'Profile/Club/:clubId',
                 Event: 'Profile/Event/:eventId',

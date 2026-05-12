@@ -15,7 +15,6 @@ import { textStyles } from '../lib/tokens/textStyles';
 import { Button, Icon } from '../components/ui';
 
 const PRIVACY_POLICY_URL = 'https://spooorty.vercel.app/privacy.html';
-// TODO: replace with the real URL once Termly Terms doc is published
 const TERMS_URL = 'https://spooorty.vercel.app/terms.html';
 const SUPPORT_EMAIL = 'yeinlillianlee@gmail.com';
 

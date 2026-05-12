@@ -34,6 +34,14 @@ export type DbUser = {
   social_platform: string | null;
   phone_hash: string | null;
   phone_number: string | null;
+  notif_friend_request: boolean;
+  notif_friend_accepted: boolean;
+  notif_join_request: boolean;
+  notif_join_decision: boolean;
+  notif_event_update: boolean;
+  notif_club_update: boolean;
+  account_visibility: 'public' | 'private';
+  friend_suggestions_from_contacts: boolean;
   preferred_sports: string[];
   onboarding_completed: boolean;
   is_active: boolean;
@@ -182,8 +190,17 @@ export type UpdateUser = Partial<
     | 'social_platform'
     | 'phone_hash'
     | 'phone_number'
+    | 'notif_friend_request'
+    | 'notif_friend_accepted'
+    | 'notif_join_request'
+    | 'notif_join_decision'
+    | 'notif_event_update'
+    | 'notif_club_update'
+    | 'account_visibility'
+    | 'friend_suggestions_from_contacts'
     | 'preferred_sports'
     | 'onboarding_completed'
+    | 'is_active'
   >
 >;
 

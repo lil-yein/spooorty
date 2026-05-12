@@ -89,10 +89,10 @@ function SettingRow({ label, icon, onPress }: SettingRowProps) {
   return (
     <Pressable style={styles.row} onPress={onPress}>
       <View style={styles.rowLeft}>
-        <Icon type={icon} size={24} color={colors.icon.bold} />
+        <Icon type={icon} size={16} color={colors.icon.bold} />
         <Text style={styles.rowLabel}>{label}</Text>
       </View>
-      <Icon type="chevron right" size={24} color={colors.icon.bold} />
+      <Icon type="chevron right" size={16} color={colors.icon.bold} />
     </Pressable>
   );
 }
@@ -138,7 +138,7 @@ const styles = StyleSheet.create({
   },
 
   rowLabel: {
-    ...textStyles.title01Medium,
+    ...textStyles.title02Medium,
     color: colors.text.bold,
   },
 });

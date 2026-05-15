@@ -827,14 +827,13 @@ export default function CreateClubScreen() {
                 </View>
                 <TextInput
                   style={styles.feeInput}
-                  placeholder="$00"
+                  placeholder="e.g. $20 / month or Free"
                   placeholderTextColor={colors.text.subtle}
                   value={feeValue}
                   onChangeText={(text) => {
                     setFeeValue(text);
                     if (submitted) setFieldErrors((prev) => ({ ...prev, fee: null }));
                   }}
-                  keyboardType="number-pad"
                 />
                 {submitted && fieldErrors.fee && (
                   <Text style={styles.fieldError}>{fieldErrors.fee}</Text>

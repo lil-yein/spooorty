@@ -29,6 +29,17 @@ function confirm(title: string, message: string): Promise<boolean> {
   });
 }
 
+// Web-friendly error alert — Alert.alert silently no-ops on web in many cases.
+// Always log to console so the failure is visible in DevTools regardless of UI.
+function alertError(title: string, message: string) {
+  console.error(`[${title}] ${message}`);
+  if (Platform.OS === 'web') {
+    window.alert(`${title}\n\n${message}`);
+  } else {
+    Alert.alert(title, message);
+  }
+}
+
 export default function AccountSettingsScreen() {
   const navigation = useNavigation<any>();
   const { signOut } = useAuth();
@@ -44,9 +55,8 @@ export default function AccountSettingsScreen() {
     try {
       await deactivateCurrentUser();
       await signOut();
-    } catch (err) {
-      console.warn('Deactivate failed:', err);
-      Alert.alert('Failed', 'Could not deactivate your account. Please try again.');
+    } catch (err: any) {
+      alertError('Deactivate Failed', err?.message ?? String(err));
     } finally {
       setBusy(null);
     }
@@ -60,11 +70,12 @@ export default function AccountSettingsScreen() {
     if (!ok) return;
     setBusy('delete');
     try {
+      console.log('[Delete] invoking delete-account Edge Function…');
       await deleteCurrentUser();
+      console.log('[Delete] success, signing out…');
       await signOut();
-    } catch (err) {
-      console.warn('Delete failed:', err);
-      Alert.alert('Failed', 'Could not delete your account. Please try again.');
+    } catch (err: any) {
+      alertError('Delete Failed', err?.message ?? String(err));
     } finally {
       setBusy(null);
     }

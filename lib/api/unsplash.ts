@@ -20,20 +20,26 @@ export type UnsplashPhoto = {
 
 export type UnsplashOrientation = 'landscape' | 'portrait' | 'squarish';
 
-/** Search Unsplash for photos. Returns [] on error or missing key. */
+/**
+ * Search Unsplash for photos. Returns [] on error or missing key.
+ *
+ * Pass `orientation: undefined` (or omit) to get mixed orientations —
+ * useful for masonry grids where varied aspect ratios make the layout
+ * feel more dynamic.
+ */
 export async function searchUnsplash(
   query: string,
   page = 1,
-  orientation: UnsplashOrientation = 'landscape',
+  orientation?: UnsplashOrientation,
   perPage = 20,
 ): Promise<UnsplashPhoto[]> {
   if (!UNSPLASH_KEY || !query.trim()) return [];
-  const url =
+  let url =
     `${UNSPLASH_API}/search/photos` +
     `?query=${encodeURIComponent(query)}` +
     `&page=${page}` +
-    `&per_page=${perPage}` +
-    `&orientation=${orientation}`;
+    `&per_page=${perPage}`;
+  if (orientation) url += `&orientation=${orientation}`;
 
   try {
     const res = await fetch(url, {

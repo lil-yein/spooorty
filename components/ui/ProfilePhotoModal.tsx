@@ -95,8 +95,8 @@ export default function ProfilePhotoModal({
   const doSearch = useCallback(
     async (query: string, page: number, append: boolean) => {
       setStockLoading(true);
-      // No orientation filter — let users pick portrait/landscape/square
-      const results = await searchUnsplash(query, page, 'squarish');
+      // Mixed orientations — Figma masonry mixes portrait/landscape/square
+      const results = await searchUnsplash(query, page);
       setStockPhotos((prev) => (append ? [...prev, ...results] : results));
       setStockLoading(false);
     },

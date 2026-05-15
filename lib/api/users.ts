@@ -78,10 +78,24 @@ export async function deactivateCurrentUser(): Promise<void> {
  * public.users.id then wipes the profile and all related rows.
  */
 export async function deleteCurrentUser(): Promise<void> {
-  const { error } = await supabase.functions.invoke('delete-account', {
+  const { data, error } = await supabase.functions.invoke('delete-account', {
     method: 'POST',
   });
-  if (error) throw error;
+  // FunctionsHttpError exposes a Response on `context` we can read for a real status/body
+  if (error) {
+    let detail = error.message ?? 'Unknown error';
+    const ctx = (error as any).context;
+    if (ctx && typeof ctx.text === 'function') {
+      try {
+        const body = await ctx.text();
+        detail = `${detail} — ${ctx.status} ${body}`;
+      } catch {}
+    }
+    throw new Error(`delete-account: ${detail}`);
+  }
+  if (data && typeof data === 'object' && (data as any).ok !== true) {
+    throw new Error(`delete-account returned unexpected response: ${JSON.stringify(data)}`);
+  }
 }
 
 /** Search users by display name (for friend search, member invite) */

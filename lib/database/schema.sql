@@ -72,7 +72,7 @@ CREATE TABLE clubs (
   capacity INTEGER CHECK (capacity IS NULL OR capacity >= 1),
   is_public BOOLEAN DEFAULT TRUE,
   requires_approval BOOLEAN DEFAULT TRUE,
-  created_by UUID NOT NULL REFERENCES users(id),
+  created_by UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   is_active BOOLEAN DEFAULT TRUE,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
@@ -101,7 +101,7 @@ CREATE TABLE events (
   vibe vibe_tag,
   capacity INTEGER CHECK (capacity IS NULL OR capacity >= 1),
   requires_approval BOOLEAN DEFAULT TRUE,
-  created_by UUID NOT NULL REFERENCES users(id),
+  created_by UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   is_active BOOLEAN DEFAULT TRUE,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
@@ -117,7 +117,7 @@ CREATE TABLE club_memberships (
   status membership_status DEFAULT 'pending',
   requested_at TIMESTAMPTZ DEFAULT NOW(),
   responded_at TIMESTAMPTZ,
-  responded_by UUID REFERENCES users(id),
+  responded_by UUID REFERENCES users(id) ON DELETE SET NULL,
   UNIQUE (user_id, club_id)
 );
 
@@ -131,7 +131,7 @@ CREATE TABLE event_rsvps (
   status membership_status DEFAULT 'pending',
   requested_at TIMESTAMPTZ DEFAULT NOW(),
   responded_at TIMESTAMPTZ,
-  responded_by UUID REFERENCES users(id),
+  responded_by UUID REFERENCES users(id) ON DELETE SET NULL,
   UNIQUE (user_id, event_id)
 );
 
